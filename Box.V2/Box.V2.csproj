@@ -32,6 +32,8 @@
     <DefineConstants>TRACE;RELEASE;NET45</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>BoxSDKKey.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="BouncyCastle.Crypto, Version=1.8.9.0, Culture=neutral, PublicKeyToken=0e99375e54769942">
@@ -81,6 +83,7 @@
     <Compile Include="Managers\BoxCollectionsManager.cs" />
     <Compile Include="Managers\BoxDevicePinManager.cs" />
     <Compile Include="Managers\BoxEventsManager.cs" />
+    <Compile Include="Managers\BoxFileRequestsManager.cs" />
     <Compile Include="Managers\BoxGroupsManager.cs" />
     <Compile Include="Managers\BoxMetadataManager.cs" />
     <Compile Include="Managers\BoxMetadataCascadePolicyManager.cs" />
@@ -117,6 +120,7 @@
     <Compile Include="Managers\IBoxUsersManager.cs" />
     <Compile Include="Managers\IBoxWebhooksManager.cs" />
     <Compile Include="Managers\IBoxWebLinksManager.cs" />
+    <Compile Include="Managers\IBoxFileRequestsManager.cs" />
     <Compile Include="Models\BoxApplication.cs" />
     <Compile Include="Models\BoxAssignmentCounts.cs" />
     <Compile Include="Models\BoxClassification.cs" />
@@ -125,6 +129,7 @@
     <Compile Include="Models\BoxEmailAlias.cs" />
     <Compile Include="Models\BoxEnterprise.cs" />
     <Compile Include="Models\BoxEnterpriseEvent.cs" />
+    <Compile Include="Models\BoxFileRequestObject.cs" />
     <Compile Include="Models\BoxFolderEventSource.cs" />
     <Compile Include="Models\BoxFolderLock.cs" />
     <Compile Include="Models\BoxFolderLockOperations.cs" />
@@ -192,6 +197,8 @@
     <Compile Include="Models\BoxGroupMembership.cs" />
     <Compile Include="Models\Request\BoxActionableByRequest.cs" />
     <Compile Include="Models\BoxSessionParts.cs" />
+    <Compile Include="Models\Request\BoxFileRequestUpdateRequest.cs" />
+    <Compile Include="Models\Request\BoxFileRequestCopyRequest.cs" />
     <Compile Include="Models\Request\BoxFileUploadSessionRequest.cs" />
     <Compile Include="Models\Request\BoxSignRequestCreateRequest.cs" />
     <Compile Include="Models\Request\BoxTermsOfServiceUserStatusCreateRequest.cs" />
