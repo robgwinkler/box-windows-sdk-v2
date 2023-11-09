@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Box.V2.Auth;
 using Box.V2.Config;
@@ -5,6 +6,7 @@ using Box.V2.Exceptions;
 using Box.V2.JWTAuth;
 using Box.V2.Request;
 using Box.V2.Services;
+using Box.V2.Test.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
@@ -25,11 +27,11 @@ namespace Box.V2.Test
             _service = new BoxService(_handler.Object);
             _boxConfig = new Mock<IBoxConfig>();
             _boxConfig.SetupGet(x => x.EnterpriseId).Returns("12345");
-            _jwtAuth = new BoxJWTAuth(_boxConfig.Object, _service);
+            _boxConfig.SetupGet(x => x.BoxApiHostUri).Returns(new Uri(Constants.BoxApiHostUriString));
+            _jwtAuth = new BoxJWTAuth(_boxConfig.Object, _service, new InstantRetryStrategy());
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetToken_ValidSession()
         {
             // Arrange
@@ -48,7 +50,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         [ExpectedException(typeof(BoxAPIException))]
         public async Task GetToken_MaxRetries_Exception()
         {
@@ -95,7 +96,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetToken_Retries_ValidSession()
         {
             // Arrange

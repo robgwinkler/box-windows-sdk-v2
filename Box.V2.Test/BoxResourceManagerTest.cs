@@ -1,12 +1,12 @@
 using System;
 using System.IO;
-using System.Reflection;
 using System.Text;
 using Box.V2.Auth;
 using Box.V2.Config;
 using Box.V2.Converter;
 using Box.V2.Request;
 using Box.V2.Services;
+using Box.V2.Test.Helpers;
 using Moq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -49,7 +49,10 @@ namespace Box.V2.Test
             Config.SetupGet(x => x.FolderLocksEndpointUri).Returns(FolderLocksUri);
             Config.SetupGet(x => x.SignRequestsEndpointUri).Returns(SignRequestUri);
             Config.SetupGet(x => x.SignRequestsEndpointWithPathUri).Returns(SignRequestWithPathUri);
+            Config.SetupGet(x => x.SignTemplatesEndpointUri).Returns(new Uri(Constants.SignTemplatesEndpointString));
+            Config.SetupGet(x => x.SignTemplatesEndpointWithPathUri).Returns(new Uri(Constants.SignTemplatesWithPathEndpointString));
             Config.SetupGet(x => x.FileRequestsEndpointWithPathUri).Returns(FileRequestsWithPathUri);
+            Config.SetupGet(x => x.RetryStrategy).Returns(new InstantRetryStrategy());
 
             AuthRepository = new AuthRepository(Config.Object, Service, Converter, new OAuthSession("fakeAccessToken", "fakeRefreshToken", 3600, "bearer"));
         }
@@ -71,21 +74,6 @@ namespace Box.V2.Test
                 sb.Append(hex);
             }
             return sb.ToString();
-        }
-        public static T CreateInstanceNonPublicConstructor<T>()
-        {
-            _ = new Type[0];
-
-            ConstructorInfo[] c = typeof(T).GetConstructors
-                (BindingFlags.NonPublic | BindingFlags.Instance
-                );
-
-            var inst =
-                (T)c[0].Invoke(BindingFlags.NonPublic,
-                               null,
-                               null,
-                               System.Threading.Thread.CurrentThread.CurrentCulture);
-            return inst;
         }
 
         public string LoadFixtureFromJson(string path)

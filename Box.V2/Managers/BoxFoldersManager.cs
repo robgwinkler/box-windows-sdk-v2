@@ -7,6 +7,7 @@ using Box.V2.Converter;
 using Box.V2.Extensions;
 using Box.V2.Models;
 using Box.V2.Services;
+using Box.V2.Utility;
 using Newtonsoft.Json.Linq;
 
 namespace Box.V2.Managers
@@ -15,27 +16,6 @@ namespace Box.V2.Managers
     {
         public BoxFoldersManager(IBoxConfig config, IBoxService service, IBoxConverter converter, IAuthRepository auth, string asUser = null, bool? suppressNotifications = null)
             : base(config, service, converter, auth, asUser, suppressNotifications) { }
-
-        /// <summary>
-        /// Retrieves the files and/or folders contained in the provided folder id
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="limit"></param>
-        /// <param name="offset"></param>
-        [Obsolete("This endpoint is not officially supported by the API and is not guaranteed to be available in the next version. Please use GetFolderItemsAsync")]
-        public async Task<BoxFolder> GetItemsAsync(string id, int limit, int offset = 0, IEnumerable<string> fields = null)
-        {
-            id.ThrowIfNullOrWhiteSpace("id");
-
-            BoxRequest request = new BoxRequest(_config.FoldersEndpointUri, id)
-                .Param("limit", limit.ToString())
-                .Param("offset", offset.ToString())
-                .Param(ParamFields, fields);
-
-            IBoxResponse<BoxFolder> response = await ToResponseAsync<BoxFolder>(request).ConfigureAwait(false);
-
-            return response.ResponseObject;
-        }
 
         /// <summary>
         /// Retrieves the files and/or folders contained within this folder without any other metadata about the folder. 
@@ -53,10 +33,13 @@ namespace Box.V2.Managers
         /// <param name="autoPaginate">Whether or not to auto-paginate to fetch all items; defaults to false.</param>
         /// <param name="sort">The field to sort items on</param>
         /// <param name="direction">The direction to sort results in: ascending or descending</param>
+        /// <param name="sharedLink">The shared link for this folder</param>
+        /// <param name="sharedLinkPassword">The password for the shared link (if required)</param>
         /// <returns>A collection of items contained in the folder is returned. An error is thrown if the folder does not exist, 
         /// or if any of the parameters are invalid. The total_count returned may not match the number of entries when using enterprise scope, 
         /// because external folders are hidden the list of entries.</returns>
-        public async Task<BoxCollection<BoxItem>> GetFolderItemsAsync(string id, int limit, int offset = 0, IEnumerable<string> fields = null, bool autoPaginate = false, string sort = null, BoxSortDirection? direction = null)
+        public async Task<BoxCollection<BoxItem>> GetFolderItemsAsync(string id, int limit, int offset = 0, IEnumerable<string> fields = null, bool autoPaginate = false, string sort = null, BoxSortDirection? direction = null,
+            string sharedLink = null, string sharedLinkPassword = null)
         {
             id.ThrowIfNullOrWhiteSpace("id");
 
@@ -66,6 +49,12 @@ namespace Box.V2.Managers
                 .Param("sort", sort)
                 .Param("direction", direction.ToString())
                 .Param(ParamFields, fields);
+
+            if (!string.IsNullOrEmpty(sharedLink))
+            {
+                var sharedLinkHeader = SharedLinkUtils.GetSharedLinkHeader(sharedLink, sharedLinkPassword);
+                request.Header(sharedLinkHeader.Item1, sharedLinkHeader.Item2);
+            }
 
             if (autoPaginate)
             {
@@ -107,15 +96,23 @@ namespace Box.V2.Managers
         /// </summary>
         /// <param name="id">The folder id</param>
         /// <param name="fields">Attribute(s) to include in the response</param>
-        /// <returns>A full folder object is returned, including the most current information available about it. 
+        /// <param name="sharedLink">The shared link for this folder</param>
+        /// <param name="sharedLinkPassword">The password for the shared link (if required)</param>
+        /// <returns>A full folder object is returned, including the most current information available about it.
         /// An exception is thrown if the folder does not exist or if the user does not have access to it.</returns>
-        public async Task<BoxFolder> GetInformationAsync(string id, IEnumerable<string> fields = null)
+        public async Task<BoxFolder> GetInformationAsync(string id, IEnumerable<string> fields = null, string sharedLink = null, string sharedLinkPassword = null)
         {
             id.ThrowIfNullOrWhiteSpace("id");
 
             BoxRequest request = new BoxRequest(_config.FoldersEndpointUri, id)
                 .Method(RequestMethod.Get)
                 .Param(ParamFields, fields);
+
+            if (!string.IsNullOrEmpty(sharedLink))
+            {
+                var sharedLinkHeader = SharedLinkUtils.GetSharedLinkHeader(sharedLink, sharedLinkPassword);
+                request.Header(sharedLinkHeader.Item1, sharedLinkHeader.Item2);
+            }
 
             IBoxResponse<BoxFolder> response = await ToResponseAsync<BoxFolder>(request).ConfigureAwait(false);
 
@@ -207,6 +204,9 @@ namespace Box.V2.Managers
         {
             id.ThrowIfNullOrWhiteSpace("id");
 
+            if (sharedLinkRequest?.Permissions != null)
+                sharedLinkRequest.Permissions.Edit.ThrowIfDifferent("sharedLinkRequest.permissions.edit", false);
+
             BoxRequest request = new BoxRequest(_config.FoldersEndpointUri, id)
                 .Method(RequestMethod.Put)
                 .Param(ParamFields, fields)
@@ -286,33 +286,6 @@ namespace Box.V2.Managers
                 IBoxResponse<BoxCollection<BoxItem>> response = await ToResponseAsync<BoxCollection<BoxItem>>(request).ConfigureAwait(false);
                 return response.ResponseObject;
             }
-        }
-
-        /// <summary>
-        /// Retrieves the files and/or folders that have been moved to the trash. Any attribute in the full files 
-        /// or folders objects can be passed in with the fields parameter to get specific attributes, and only those 
-        /// specific attributes back; otherwise, the mini format is returned for each item by default. Multiple 
-        /// attributes can be passed in separated by commas e.g. fields=name,created_at. Paginated results can be 
-        /// retrieved using the limit and offset parameters.
-        /// </summary>
-        /// <param name="id">This param is not used in implementation</param>
-        /// <param name="limit">The maximum number of items to return</param>
-        /// <param name="offset">The item at which to begin the response</param>
-        /// <param name="fields">Attribute(s) to include in the response</param>
-        /// <returns>A collection of items contained in the trash is returned. An error is thrown if any of the parameters are invalid.</returns>
-        [Obsolete("This method will be removed in a future update. Please use the GetTrashItemsAsync(int, int, IEnumerable<string>) overload")]
-        public async Task<BoxCollection<BoxItem>> GetTrashItemsAsync(string id, int limit, int offset = 0, IEnumerable<string> fields = null)
-        {
-            id.ThrowIfNullOrWhiteSpace("id");
-
-            BoxRequest request = new BoxRequest(_config.FoldersEndpointUri, Constants.TrashItemsPathString)
-                .Param("limit", limit.ToString())
-                .Param("offset", offset.ToString())
-                .Param(ParamFields, fields);
-
-            IBoxResponse<BoxCollection<BoxItem>> response = await ToResponseAsync<BoxCollection<BoxItem>>(request).ConfigureAwait(false);
-
-            return response.ResponseObject;
         }
 
         /// <summary>

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http.Headers;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Box.V2.Config;
 using Box.V2.Exceptions;
@@ -25,7 +25,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetFolderItems_ValidResponse_ValidFolder()
         {
             Handler.Setup(h => h.ExecuteAsync<BoxCollection<BoxItem>>(It.IsAny<IBoxRequest>()))
@@ -59,7 +58,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetFolderItems_ValidResponse_SortDirection()
         {
             IBoxRequest boxRequest = null;
@@ -78,62 +76,23 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
-        public async Task GetFolder_ValidResponse_ValidFolder()
+        public async Task GetFolderItems_ValidHeader_ValidSharedLink()
         {
-            Handler.Setup(h => h.ExecuteAsync<BoxFolder>(It.IsAny<IBoxRequest>()))
-                .Returns(() => Task.FromResult<IBoxResponse<BoxFolder>>(new BoxResponse<BoxFolder>()
+            IBoxRequest boxRequest = null;
+            Handler.Setup(h => h.ExecuteAsync<BoxCollection<BoxItem>>(It.IsAny<IBoxRequest>()))
+                .Returns(() => Task.FromResult<IBoxResponse<BoxCollection<BoxItem>>>(new BoxResponse<BoxCollection<BoxItem>>()
                 {
                     Status = ResponseStatus.Success,
-                    ContentString = "{ \"type\":\"folder\", \"id\":\"0\", \"sequence_id\":null, \"etag\":null, \"name\":\"All Files\", \"created_at\":null, \"modified_at\":null, \"description\":\"\", \"size\":61591428468, \"path_collection\":{ \"total_count\":0, \"entries\":[ ] }, \"created_by\":{ \"type\":\"user\", \"id\":\"189912110\", \"name\":\"Brian\", \"login\":\"brianytang@gmail.com\" }, \"modified_by\":{ \"type\":\"user\", \"id\":\"189912110\", \"name\":\"Brian\", \"login\":\"brianytang@gmail.com\" }, \"trashed_at\":null, \"purged_at\":null, \"content_created_at\":null, \"content_modified_at\":null, \"owned_by\":{ \"type\":\"user\", \"id\":\"189912110\", \"name\":\"Brian\", \"login\":\"brianytang@gmail.com\" }, \"shared_link\":null, \"folder_upload_email\":null, \"parent\":null, \"item_status\":\"active\", \"item_collection\":{ \"total_count\":10, \"entries\":[ { \"type\":\"folder\", \"id\":\"766352168\", \"sequence_id\":\"0\", \"etag\":\"0\", \"name\":\"Books\" }, { \"type\":\"folder\", \"id\":\"869883498\", \"sequence_id\":\"0\", \"etag\":\"0\", \"name\":\"bytLabs\" }, { \"type\":\"folder\", \"id\":\"767221958\", \"sequence_id\":\"0\", \"etag\":\"0\", \"name\":\"Games\" }, { \"type\":\"folder\", \"id\":\"766174084\", \"sequence_id\":\"0\", \"etag\":\"0\", \"name\":\"Mixes\" }, { \"type\":\"folder\", \"id\":\"57181304\", \"sequence_id\":\"0\", \"etag\":\"0\", \"name\":\"Muzik\" }, { \"type\":\"folder\", \"id\":\"857305570\", \"sequence_id\":\"0\", \"etag\":\"0\", \"name\":\"My\" }, { \"type\":\"folder\", \"id\":\"627316229\", \"sequence_id\":\"1\", \"etag\":\"1\", \"name\":\"My Music Folder\" }, { \"type\":\"folder\", \"id\":\"860155462\", \"sequence_id\":\"0\", \"etag\":\"0\", \"name\":\"sample\" }, { \"type\":\"folder\", \"id\":\"775829294\", \"sequence_id\":\"0\", \"etag\":\"0\", \"name\":\"Software\" }, { \"type\":\"folder\", \"id\":\"811565831\", \"sequence_id\":\"0\", \"etag\":\"0\", \"name\":\"Test\" } ], \"offset\":0, \"limit\":10, \"order\":[ { \"by\":\"type\", \"direction\":\"ASC\" }, { \"by\":\"name\", \"direction\":\"ASC\" } ] } }"
-                }));
+                    ContentString = "{\"total_count\":24,\"entries\":[{\"type\":\"folder\",\"id\":\"192429928\",\"sequence_id\":\"1\",\"etag\":\"1\",\"name\":\"Stephen Curry Three Pointers\"},{\"type\":\"file\",\"id\":\"818853862\",\"sequence_id\":\"0\",\"etag\":\"0\",\"name\":\"Warriors.jpg\"}],\"offset\":0,\"limit\":2,\"order\":[{\"by\":\"type\",\"direction\":\"ASC\"},{\"by\":\"name\",\"direction\":\"ASC\"}]}"
+                })).Callback<IBoxRequest>(r => boxRequest = r);
 
-            BoxFolder f = await _foldersManager.GetItemsAsync("0", 10);
+            BoxCollection<BoxItem> items = await _foldersManager.GetFolderItemsAsync("0", 2, sharedLink: "my_shared_link", sharedLinkPassword: "SuperSecret123");
 
-            Assert.AreEqual(f.Id, "0");
-            Assert.AreEqual(f.Type, "folder");
-            Assert.IsNull(f.SequenceId);
-            Assert.IsNull(f.ETag);
-            Assert.IsNull(f.CreatedAt);
-            Assert.IsNull(f.ModifiedAt);
-            Assert.AreEqual(f.Description, "");
-            Assert.AreEqual(f.Size, 61591428468);
-            Assert.AreEqual(f.PathCollection.TotalCount, 0);
-            Assert.AreEqual(f.PathCollection.Entries.Count, 0);
-            Assert.AreEqual(f.CreatedBy.Type, "user");
-            Assert.AreEqual(f.CreatedBy.Id, "189912110");
-            Assert.AreEqual(f.CreatedBy.Name, "Brian");
-            Assert.AreEqual(f.CreatedBy.Login, "brianytang@gmail.com");
-            Assert.AreEqual(f.ModifiedBy.Type, "user");
-            Assert.AreEqual(f.ModifiedBy.Id, "189912110");
-            Assert.AreEqual(f.ModifiedBy.Name, "Brian");
-            Assert.AreEqual(f.ModifiedBy.Login, "brianytang@gmail.com");
-            //Assert.IsNull(f.TrashedAt); // Need to add property
-            //Assert.IsNull(f.PurgedAt); // Need to add property
-            //Assert.IsNull(f.ContentCreatedAt); // Need to add property
-            //Assert.IsNull(f.ContentModifiedAt); // Need to add property
-            Assert.AreEqual(f.OwnedBy.Type, "user");
-            Assert.AreEqual(f.OwnedBy.Id, "189912110");
-            Assert.AreEqual(f.OwnedBy.Name, "Brian");
-            Assert.AreEqual(f.OwnedBy.Login, "brianytang@gmail.com");
-            Assert.IsNull(f.SharedLink);
-            Assert.IsNull(f.FolderUploadEmail);
-            Assert.IsNull(f.Parent);
-            Assert.AreEqual(f.ItemStatus, "active");
-            Assert.AreEqual(f.Id, "0");
-            Assert.AreEqual(f.Name, "All Files");
-            Assert.AreEqual(f.ModifiedBy.Id, "189912110");
-            Assert.AreEqual(f.ItemCollection.TotalCount, 10);
-            Assert.AreEqual(f.ItemCollection.Entries.Count, 10);
-            //Assert.AreEqual(f.Offset, "0"); // Need to add property
-            //Assert.AreEqual(f.Order[0].By, "type"); // Need to add property
-            //Assert.AreEqual(f.Order[0].Direction, "ASC"); // Need to add property
-            //Assert.AreEqual(f.Order[1].By, "name"); // Need to add property
-            //Assert.AreEqual(f.Order[1].Direction, "ASC"); // Need to add property
+            Assert.IsTrue(boxRequest.HttpHeaders.ContainsKey("BoxApi"));
+            Assert.AreEqual(boxRequest.HttpHeaders["BoxApi"], "shared_link=my_shared_link&shared_link_password=SuperSecret123");
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task CreateFolder_ValidResponse_ValidFolder()
         {
             Handler.Setup(h => h.ExecuteAsync<BoxFolder>(It.IsAny<IBoxRequest>()))
@@ -203,10 +162,9 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task CreateFolder_ValidResponse_BadRequest()
         {
-            HttpResponseHeaders headers = CreateInstanceNonPublicConstructor<HttpResponseHeaders>();
+            var headers = new HttpResponseMessage().Headers;
             headers.Add("BOX-REQUEST-ID", "0vsm9dam264cpub3esr293i4ssm");
             Handler.Setup(h => h.ExecuteAsync<BoxFolder>(It.IsAny<IBoxRequest>()))
                 .Returns(() => Task.FromResult<IBoxResponse<BoxFolder>>(new BoxResponse<BoxFolder>()
@@ -242,11 +200,9 @@ namespace Box.V2.Test
             }
         }
 
-        [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task CreateFolder_Unauthorized()
         {
-            HttpResponseHeaders headers = CreateInstanceNonPublicConstructor<HttpResponseHeaders>();
+            var headers = new HttpResponseMessage().Headers;
             headers.Add("BOX-REQUEST-ID", "0vsm9dam264cpub3esr293i4ssm");
             Handler.Setup(h => h.ExecuteAsync<BoxFolder>(It.IsAny<IBoxRequest>()))
                 .Returns(() => Task.FromResult<IBoxResponse<BoxFolder>>(new BoxResponse<BoxFolder>()
@@ -278,7 +234,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task CreateFolder_ValidResponse_NameConflict()
         {
             Handler.Setup(h => h.ExecuteAsync<BoxFolder>(It.IsAny<IBoxRequest>()))
@@ -355,7 +310,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetFolderInformation_ValidResponse_ValidFolder()
         {
             IBoxRequest boxRequest = null;
@@ -529,7 +483,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task CopyFolder_ValidResponse_ValidFolder()
         {
             /*** Arrange ***/
@@ -558,7 +511,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task UpdateFolderInformation_ValidResponse_ValidFolder()
         {
             /*** Arrange ***/
@@ -590,7 +542,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task CreateFolderSharedLink_ValidResponse_ValidFolder()
         {
             /*** Arrange ***/
@@ -598,7 +549,7 @@ namespace Box.V2.Test
                 .Returns(() => Task.FromResult<IBoxResponse<BoxFolder>>(new BoxResponse<BoxFolder>()
                 {
                     Status = ResponseStatus.Success,
-                    ContentString = "{ \"type\": \"folder\", \"id\": \"11446498\", \"sequence_id\": \"1\", \"etag\": \"1\", \"name\": \"Pictures\", \"created_at\": \"2012-12-12T10:53:43-08:00\", \"modified_at\": \"2012-12-12T11:15:04-08:00\", \"description\": \"Some pictures I took\", \"size\": 629644, \"path_collection\": { \"total_count\": 1, \"entries\": [ { \"type\": \"folder\", \"id\": \"0\", \"sequence_id\": null, \"etag\": null, \"name\": \"All Files\" } ] }, \"created_by\": { \"type\": \"user\", \"id\": \"17738362\", \"name\": \"sean rose\", \"login\": \"sean@box.com\" }, \"modified_by\": { \"type\": \"user\", \"id\": \"17738362\", \"name\": \"sean rose\", \"login\": \"sean@box.com\" }, \"owned_by\": { \"type\": \"user\", \"id\": \"17738362\", \"name\": \"sean rose\", \"login\": \"sean@box.com\" }, \"shared_link\": { \"url\": \"https://www.box.com/s/vspke7y05sb214wjokpk\", \"download_url\": \"https://www.box.com/shared/static/vspke7y05sb214wjokpk\", \"vanity_url\": null, \"vanity_name\": \"my-custom-vanity-name\", \"is_password_enabled\": false, \"unshared_at\": null, \"download_count\": 0, \"preview_count\": 0, \"access\": \"open\", \"permissions\": { \"can_download\": true, \"can_preview\": true } }, \"folder_upload_email\": { \"access\": \"open\", \"email\": \"upload.Picture.k13sdz1@u.box.com\" }, \"parent\": { \"type\": \"folder\", \"id\": \"0\", \"sequence_id\": null, \"etag\": null, \"name\": \"All Files\" }, \"item_status\": \"active\", \"item_collection\": { \"total_count\": 1, \"entries\": [ { \"type\": \"file\", \"id\": \"5000948880\", \"sequence_id\": \"3\", \"etag\": \"3\", \"sha1\": \"134b65991ed521fcfe4724b7d814ab8ded5185dc\", \"name\": \"tigers.jpeg\" } ], \"offset\": 0, \"limit\": 100 } }"
+                    ContentString = LoadFixtureFromJson("Fixtures/BoxFolders/CreateFolderSharedLink200.json")
                 }));
 
             /*** Act ***/
@@ -617,10 +568,37 @@ namespace Box.V2.Test
             Assert.AreEqual("1", f.ETag);
             Assert.AreEqual("Pictures", f.Name);
             Assert.AreEqual("my-custom-vanity-name", f.SharedLink.VanityName);
+            Assert.AreEqual(false, f.SharedLink.Permissions.CanEdit);
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
+        public async Task CreateFolderSharedLink_ShouldThrowArgumentException_WhenEditIsTrue()
+        {
+            /*** Arrange ***/
+            IBoxRequest boxRequest = null;
+            Handler.Setup(h => h.ExecuteAsync<BoxFolder>(It.IsAny<IBoxRequest>()))
+                .Returns(() => Task.FromResult<IBoxResponse<BoxFolder>>(new BoxResponse<BoxFolder>()
+                {
+                    Status = ResponseStatus.Success,
+                    ContentString = LoadFixtureFromJson("Fixtures/BoxFolders/CreateFolderSharedLink200.json")
+                }))
+                .Callback<IBoxRequest>(r => boxRequest = r);
+
+            var sharedLink = new BoxSharedLinkRequest()
+            {
+                Access = BoxSharedLinkAccessType.collaborators,
+                VanityName = "my-custom-vanity-name",
+                Permissions = new BoxPermissionsRequest
+                {
+                    Edit = true
+                }
+            };
+
+            /*** Act && Assert ***/
+            await Assert.ThrowsExceptionAsync<ArgumentException>(async () => { _ = await _foldersManager.CreateSharedLinkAsync("12345", sharedLink); });
+        }
+
+        [TestMethod]
         public async Task GetFolderCollaborators_ValidResponse_ValidCollaborators()
         {
             /*** Arrange ***/
@@ -647,7 +625,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetFolderCollaborators_ValidResponseWithGroups_ValidCollaborators()
         {
             /*** Arrange ***/
@@ -682,7 +659,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetTrashedItems_ValidResponse_ValidFiles()
         {
             /*** Arrange ***/
@@ -694,7 +670,7 @@ namespace Box.V2.Test
                 }));
 
             /*** Act ***/
-            BoxCollection<BoxItem> i = await _foldersManager.GetTrashItemsAsync("fakeId", 10);
+            BoxCollection<BoxItem> i = await _foldersManager.GetTrashItemsAsync(10);
             BoxItem i1 = i.Entries.FirstOrDefault();
             BoxItem i2 = i.Entries.Skip(1).FirstOrDefault();
 
@@ -715,7 +691,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task RestoreTrashedFolder_ValidResponse_ValidFolder()
         {
             IBoxRequest boxRequest = null;
@@ -755,7 +730,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetTrashedFolder_ValidResponse_ValidFolder()
         {
             /*** Arrange ***/
@@ -778,7 +752,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task DeleteFolder_ValidResponse_FolderDeleted()
         {
             /*** Arrange ***/
@@ -801,7 +774,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetTrashItems_ValidResponse_ValidCountAndEntries()
         {
             /*** Arrange ***/
@@ -852,7 +824,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetTrashItems_SortParamsArePassed()
         {
             /*** Arrange ***/
@@ -881,7 +852,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task PurgeTrashedFolder_ValidResponse_FolderDeleted()
         {
             /*** Arrange ***/
@@ -904,7 +874,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetWatermarkForFolder_ValidResponse_ValidWatermark()
         {
             /*** Arrange ***/
@@ -938,7 +907,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task ApplyWatermarkToFolder_ValidResponse_ValidWatermark()
         {
             /*** Arrange ***/
@@ -974,7 +942,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task RemoveWatermarkFromFolder_ValidResponse_RemovedWatermark()
         {
             /*** Arrange ***/
@@ -1003,7 +970,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetFolderLocks_ValidResponse()
         {
             /*** Arrange ***/
@@ -1035,7 +1001,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task CreateFolderLock_ValidResponse()
         {
             /*** Arrange ***/
@@ -1072,7 +1037,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task DeleteFolderLock_ValidResponse()
         {
             /*** Arrange ***/

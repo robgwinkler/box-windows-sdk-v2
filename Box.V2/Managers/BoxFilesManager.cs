@@ -15,6 +15,7 @@ using Box.V2.Exceptions;
 using Box.V2.Extensions;
 using Box.V2.Models;
 using Box.V2.Models.Request;
+using Box.V2.Request;
 using Box.V2.Services;
 using Box.V2.Utility;
 using Newtonsoft.Json.Linq;
@@ -35,13 +36,21 @@ namespace Box.V2.Managers
         /// </summary>
         /// <param name="id">Id of the file.</param>
         /// <param name="fields">Attribute(s) to include in the response.</param>
+        /// <param name="sharedLink">The shared link for this file</param>
+        /// <param name="sharedLinkPassword">The password for the shared link (if required)</param>
         /// <returns>A full file object is returned if the ID is valid and if the user has access to the file.</returns>
-        public async Task<BoxFile> GetInformationAsync(string id, IEnumerable<string> fields = null)
+        public async Task<BoxFile> GetInformationAsync(string id, IEnumerable<string> fields = null, string sharedLink = null, string sharedLinkPassword = null)
         {
             id.ThrowIfNullOrWhiteSpace("id");
 
             BoxRequest request = new BoxRequest(_config.FilesEndpointUri, id)
                 .Param(ParamFields, fields);
+
+            if (!string.IsNullOrEmpty(sharedLink))
+            {
+                var sharedLinkHeader = SharedLinkUtils.GetSharedLinkHeader(sharedLink, sharedLinkPassword);
+                request.Header(sharedLinkHeader.Item1, sharedLinkHeader.Item2);
+            }
 
             IBoxResponse<BoxFile> response = await ToResponseAsync<BoxFile>(request).ConfigureAwait(false);
 
@@ -54,11 +63,12 @@ namespace Box.V2.Managers
         /// <param name="id">Id of the file to download.</param>
         /// <param name="versionId">The ID specific version of this file to download.</param>
         /// <param name="timeout">Optional timeout for response.</param>
-        /// <param name="startOffsetInBytes">Optional timeout for response.</param>
-        /// <param name="endOffsetInBytes">Optional timeout for response.</param>
+        /// <param name="startOffsetInBytes">Starting byte of the chunk to download.</param>
+        /// <param name="endOffsetInBytes">Ending byte of the chunk to download.</param>
+        /// <param name="sharedLink">The shared link for this file</param>
+        /// <param name="sharedLinkPassword">The password for the shared link (if required)</param>
         /// <returns>Stream of the requested file.</returns>
-        [Obsolete("This method is deprecated in favor of DownloadAsync()")]
-        public async Task<Stream> DownloadStreamAsync(string id, string versionId = null, TimeSpan? timeout = null, int? startOffsetInBytes = null, int? endOffsetInBytes = null)
+        public async Task<Stream> DownloadAsync(string id, string versionId = null, TimeSpan? timeout = null, long? startOffsetInBytes = null, long? endOffsetInBytes = null, string sharedLink = null, string sharedLinkPassword = null)
         {
             id.ThrowIfNullOrWhiteSpace("id");
 
@@ -70,29 +80,10 @@ namespace Box.V2.Managers
                 request = request.Header("Range", $"bytes={startOffsetInBytes}-{endOffsetInBytes}");
             }
 
-            IBoxResponse<Stream> response = await ToResponseAsync<Stream>(request).ConfigureAwait(false);
-            return response.ResponseObject;
-        }
-
-        /// <summary>
-        /// Returns the stream of the requested file.
-        /// </summary>
-        /// <param name="id">Id of the file to download.</param>
-        /// <param name="versionId">The ID specific version of this file to download.</param>
-        /// <param name="timeout">Optional timeout for response.</param>
-        /// <param name="startOffsetInBytes">Starting byte of the chunk to download.</param>
-        /// <param name="endOffsetInBytes">Ending byte of the chunk to download.</param>
-        /// <returns>Stream of the requested file.</returns>
-        public async Task<Stream> DownloadAsync(string id, string versionId = null, TimeSpan? timeout = null, long? startOffsetInBytes = null, long? endOffsetInBytes = null)
-        {
-            id.ThrowIfNullOrWhiteSpace("id");
-
-            BoxRequest request = new BoxRequest(_config.FilesEndpointUri, string.Format(Constants.ContentPathString, id)) { Timeout = timeout }
-                .Param("version", versionId);
-
-            if (startOffsetInBytes.HasValue && endOffsetInBytes.HasValue)
+            if (!string.IsNullOrEmpty(sharedLink))
             {
-                request = request.Header("Range", $"bytes={startOffsetInBytes}-{endOffsetInBytes}");
+                var sharedLinkHeader = SharedLinkUtils.GetSharedLinkHeader(sharedLink, sharedLinkPassword);
+                request.Header(sharedLinkHeader.Item1, sharedLinkHeader.Item2);
             }
 
             IBoxResponse<Stream> response = await ToResponseAsync<Stream>(request).ConfigureAwait(false);
@@ -367,17 +358,7 @@ namespace Box.V2.Managers
         /// <returns> The complete BoxFile object. </returns>
         public async Task<BoxFile> CommitSessionAsync(Uri commitSessionUrl, string sha, BoxSessionParts sessionPartsInfo)
         {
-            BoxRequest request = new BoxRequest(commitSessionUrl)
-                .Method(RequestMethod.Post)
-                .Header(Constants.RequestParameters.Digest, "sha=" + sha)
-                .Payload(_converter.Serialize(sessionPartsInfo));
-
-            request.ContentType = Constants.RequestParameters.ContentTypeJson;
-
-            var response = await ToResponseAsync<BoxCollection<BoxFile>>(request).ConfigureAwait(false);
-
-            // We can only commit one file at a time, so return the first entry
-            return response.ResponseObject.Entries.FirstOrDefault();
+            return await CommitSessionInternalAsync(commitSessionUrl, sha, sessionPartsInfo).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -389,6 +370,11 @@ namespace Box.V2.Managers
         /// <returns> The complete BoxFile object. </returns>
         public async Task<BoxFile> CommitFileVersionSessionAsync(Uri commitSessionUrl, string sha, BoxSessionParts sessionPartsInfo)
         {
+            return await CommitSessionInternalAsync(commitSessionUrl, sha, sessionPartsInfo).ConfigureAwait(false);
+        }
+
+        private async Task<BoxFile> CommitSessionInternalAsync(Uri commitSessionUrl, string sha, BoxSessionParts sessionPartsInfo)
+        {
             BoxRequest request = new BoxRequest(commitSessionUrl)
                 .Method(RequestMethod.Post)
                 .Header(Constants.RequestParameters.Digest, "sha=" + sha)
@@ -396,9 +382,10 @@ namespace Box.V2.Managers
 
             request.ContentType = Constants.RequestParameters.ContentTypeJson;
 
-            var response = await ToResponseAsync<BoxFile>(request).ConfigureAwait(false);
+            var response = await ToResponseAsync<BoxCollection<BoxFile>>(request).ConfigureAwait(false);
 
-            return response.ResponseObject;
+            // We can only commit one file at a time, so return the first entry
+            return response.ResponseObject.Entries.FirstOrDefault();
         }
 
         /// <summary>
@@ -462,22 +449,6 @@ namespace Box.V2.Managers
             IBoxResponse<BoxSessionUploadStatus> response = await ToResponseAsync<BoxSessionUploadStatus>(request).ConfigureAwait(false);
 
             return response.ResponseObject;
-        }
-
-        /// <summary>
-        /// Upload a new large file version by splitting them up and uploads in a session.
-        /// </summary>
-        /// <param name="stream">The file stream.</param>
-        /// <param name="fileId">Id of the remote file.</param>
-        /// <param name="timeout">Timeout for subsequent UploadPart requests.</param>
-        /// <param name="progress">Will report progress from 1 - 100.</param>
-        /// <returns>The BoxFileVersion object.</returns>
-        [Obsolete("UploadFileVersionUsingSessionAsync is deprecated, please use UploadNewVersionUsingSessionAsync instead.")]
-        public async Task<BoxFileVersion> UploadFileVersionUsingSessionAsync(Stream stream, string fileId, string fileName = null,
-            TimeSpan? timeout = null, IProgress<BoxProgress> progress = null)
-        {
-            var response = await UploadNewVersionUsingSessionAsync(stream, fileId, fileName, timeout, progress).ConfigureAwait(false);
-            return response.FileVersion;
         }
 
         /// <summary>
@@ -690,18 +661,48 @@ namespace Box.V2.Managers
         /// </summary>
         /// <param name="id">The file id.</param>
         /// <param name="fields">Attribute(s) to include in the response.</param>
+        /// <param name="offset">Zero-based index of first OffsetID of part to return.</param>
+        /// <param name="limit">How many parts to return.</param>
+        /// <param name="autoPaginate">Whether or not to auto-paginate to fetch all; defaults to false.</param>
         /// <returns>A collection of versions other than the main version of the file. If a file has no other versions, an empty collection will be returned.
         /// Note that if a file has a total of three versions, only the first two version will be returned.</returns>
-        public async Task<BoxCollection<BoxFileVersion>> ViewVersionsAsync(string id, IEnumerable<string> fields = null)
+        public async Task<BoxCollection<BoxFileVersion>> ViewVersionsAsync(string id, IEnumerable<string> fields = null, int? offset = null, int? limit = null, bool autoPaginate = false)
         {
             id.ThrowIfNullOrWhiteSpace("id");
 
             BoxRequest request = new BoxRequest(_config.FilesEndpointUri, string.Format(Constants.VersionsPathString, id))
                 .Param(ParamFields, fields);
 
-            IBoxResponse<BoxCollection<BoxFileVersion>> response = await ToResponseAsync<BoxCollection<BoxFileVersion>>(request).ConfigureAwait(false);
+            if (offset.HasValue)
+            {
+                request.Param("offset", offset.Value.ToString());
+            }
 
-            return response.ResponseObject;
+            if (limit.HasValue)
+            {
+                request.Param("limit", limit.Value.ToString());
+            }
+
+            if (autoPaginate)
+            {
+                if (!limit.HasValue)
+                {
+                    limit = 100;
+                    request.Param("limit", limit.ToString());
+                }
+
+                if (!offset.HasValue)
+                {
+                    request.Param("offset", "0");
+                }
+
+                return await AutoPaginateLimitOffset<BoxFileVersion>(request, limit.Value).ConfigureAwait(false);
+            }
+            else
+            {
+                IBoxResponse<BoxCollection<BoxFileVersion>> response = await ToResponseAsync<BoxCollection<BoxFileVersion>>(request).ConfigureAwait(false);
+                return response.ResponseObject;
+            }
         }
 
         /// <summary>
@@ -840,25 +841,6 @@ namespace Box.V2.Managers
         /// Use this to get a list of all the collaborations on a file
         /// </summary>
         /// <param name="id">Id of the file</param>
-        /// <param name="fields">Attribute(s) to include in the response</param>
-        /// <returns>Collection of the collaborations on a file</returns>
-        [Obsolete("Use GetCollaborationsCollectionAsync() instead; this method does not return the data needed to page through the collection.")]
-        public async Task<BoxCollection<BoxCollaboration>> GetCollaborationsAsync(string id, IEnumerable<string> fields = null)
-        {
-            id.ThrowIfNullOrWhiteSpace("id");
-
-            BoxRequest request = new BoxRequest(_config.FilesEndpointUri, string.Format(Constants.CollaborationsPathString, id))
-                .Param(ParamFields, fields);
-
-            IBoxResponse<BoxCollection<BoxCollaboration>> response = await ToResponseAsync<BoxCollection<BoxCollaboration>>(request).ConfigureAwait(false);
-
-            return response.ResponseObject;
-        }
-
-        /// <summary>
-        /// Use this to get a list of all the collaborations on a file
-        /// </summary>
-        /// <param name="id">Id of the file</param>
         /// <param name="marker">Paging marker; use null to retrieve the first page of results</param>
         /// <param name="limit">Number of records to return per page</param>
         /// <param name="fields">Attribute(s) to include in the response</param>
@@ -960,68 +942,6 @@ namespace Box.V2.Managers
             return file.ExpiringEmbedLink.Url;
         }
 
-        /// <summary>
-        /// Gets the stream of a preview page
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="page"></param>
-        /// /// <param name="handleRetry"></param>
-        /// <returns>A PNG of the preview</returns>
-        [Obsolete("Please use GetPreviewLinkAsync instead.  This functionality is not supported by Box.")]
-        public async Task<Stream> GetPreviewAsync(string id, int page, bool handleRetry = true)
-        {
-            return (await GetPreviewResponseAsync(id, page, handleRetry: handleRetry).ConfigureAwait(false)).ResponseObject;
-        }
-
-        /// <summary>
-        /// Get the preview and return a BoxFilePreview response. 
-        /// </summary>
-        /// <param name="id">id of the file to return.</param>
-        /// <param name="page">page number of the file.</param>
-        /// <param name="handleRetry">specifies whether the method handles retries. If true, then the method would retry the call if the HTTP response is 'Accepted'. The delay for the retry is determined 
-        /// by the RetryAfter header, or if that header is not set, by the constant DefaultRetryDelay.</param>
-        /// <returns>BoxFilePreview that contains the stream, current page number and total number of pages in the file.</returns>
-        [Obsolete("Please use GetPreviewLinkAsync instead.  This functionality is not supported by Box.")]
-        public async Task<BoxFilePreview> GetFilePreviewAsync(string id, int page, int? maxWidth = null, int? minWidth = null, int? maxHeight = null, int? minHeight = null, bool handleRetry = true)
-        {
-            IBoxResponse<Stream> response = await GetPreviewResponseAsync(id, page, maxWidth, minWidth, maxHeight, minHeight, handleRetry).ConfigureAwait(false);
-
-            var filePreview = new BoxFilePreview
-            {
-                CurrentPage = page,
-                ReturnedStatusCode = response.StatusCode
-            };
-
-            if (response.StatusCode == HttpStatusCode.OK)
-            {
-                filePreview.PreviewStream = response.ResponseObject;
-                filePreview.TotalPages = response.BuildPagesCount();
-            }
-
-            return filePreview;
-        }
-
-        private async Task<IBoxResponse<Stream>> GetPreviewResponseAsync(string id, int page, int? maxWidth = null, int? minWidth = null, int? maxHeight = null, int? minHeight = null, bool handleRetry = true)
-        {
-            id.ThrowIfNullOrWhiteSpace("id");
-
-            BoxRequest request = new BoxRequest(_config.FilesEndpointUri, string.Format(Constants.PreviewPathString, id))
-                .Param("page", page.ToString())
-                .Param("max_width", maxWidth.ToString())
-                .Param("max_height", maxHeight.ToString())
-                .Param("min_width", minWidth.ToString())
-                .Param("min_height", minHeight.ToString());
-
-            var response = await ToResponseAsync<Stream>(request).ConfigureAwait(false);
-
-            while (response.StatusCode == HttpStatusCode.Accepted && handleRetry)
-            {
-                await Task.Delay(GetTimeDelay(response.Headers));
-                response = await ToResponseAsync<Stream>(request).ConfigureAwait(false);
-            }
-
-            return response;
-        }
 
         /// <summary>
         /// Return the time to wait until retrying the call. If no RetryAfter value is specified in the header, use default value;
@@ -1304,11 +1224,14 @@ namespace Box.V2.Managers
 
             IBoxResponse<BoxFile> response = await ToResponseAsync<BoxFile>(request).ConfigureAwait(false);
 
+            var retryCounter = 1;
+
             while (response.StatusCode == HttpStatusCode.Accepted && representationRequest.HandleRetry)
             {
-                const int RepresentationRequestRetryTime = 3000;
-                await Task.Delay(RepresentationRequestRetryTime);
-                response = await ToResponseAsync<BoxFile>(request).ConfigureAwait(false);
+                response = await CallWithRetryCheck(() => ToResponseAsync<BoxFile>(request),
+                    $"Could not get valid File Representation status after {retryCounter} retries.",
+                    retryCounter++)
+                    .ConfigureAwait(false);
             }
 
             return response.ResponseObject.Representations;
@@ -1410,7 +1333,7 @@ namespace Box.V2.Managers
             return response.ResponseObject;
         }
 
-        private async Task<string> PollRepresentationInfo(string infoUrl)
+        private async Task<string> PollRepresentationInfo(string infoUrl, int retryCounter = 1)
         {
             var infoRequest = new BoxRequest(new Uri(infoUrl));
             IBoxResponse<BoxRepresentation> infoResponse = await ToResponseAsync<BoxRepresentation>(infoRequest).ConfigureAwait(false);
@@ -1424,10 +1347,25 @@ namespace Box.V2.Managers
                     throw new BoxCodingException("Representation had error status");
                 case "none":
                 case "pending":
-                    await Task.Delay(1000);
-                    return await PollRepresentationInfo(infoUrl).ConfigureAwait(false);
+                    return await CallWithRetryCheck(() => PollRepresentationInfo(infoUrl, ++retryCounter),
+                        $"Could not get valid Representation status after {retryCounter} retries.",
+                        retryCounter)
+                        .ConfigureAwait(false);
                 default:
                     throw new BoxCodingException("Representation has unknown status");
+            }
+        }
+
+        private async Task<T> CallWithRetryCheck<T>(Func<Task<T>> action, string errorMessage, int retryCounter = 1) where T : class
+        {
+            if (retryCounter <= HttpRequestHandler.RetryLimit)
+            {
+                await Task.Delay(_config.RetryStrategy.GetRetryTimeout(retryCounter));
+                return await action().ConfigureAwait(false);
+            }
+            else
+            {
+                throw new BoxCodingException(errorMessage);
             }
         }
     }

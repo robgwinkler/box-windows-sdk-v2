@@ -9,7 +9,7 @@ namespace Box.V2.Converter
 {
     internal class BoxItemConverter : JsonCreationConverter<BoxEntity>
     {
-        private const string ItemType = "type";
+        protected const string ItemType = "type";
         private const string EventSourceItemType = "item_type";
         private const string WatermarkType = "watermark";
         private const string GroupId = "group_id";
@@ -95,6 +95,8 @@ namespace Box.V2.Converter
                         return new BoxFolderLock();
                     case Constants.TypeSignRequest:
                         return new BoxSignRequest();
+                    case Constants.TypeSignTemplate:
+                        return new BoxSignTemplate();
                     case Constants.TypeFileRequest:
                         return new BoxFileRequestObject();
                 }
@@ -143,7 +145,7 @@ namespace Box.V2.Converter
             return new BoxEntity();
         }
 
-        private bool FieldExists(string fieldName, JObject jObject)
+        protected bool FieldExists(string fieldName, JObject jObject)
         {
             return jObject[fieldName] != null;
         }

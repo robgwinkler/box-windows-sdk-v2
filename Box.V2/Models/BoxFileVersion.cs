@@ -20,7 +20,7 @@ namespace Box.V2.Models
         public const string FieldPurgedAt = "purged_at";
         public const string FieldRestoredAt = "restored_at";
         public const string FieldRestoredBy = "restored_by";
-        public const string FieldFileVersion = "file_version";
+        public const string FieldVersionNumber = "version_number";
 
         /// <summary>
         /// The sha1 hash of this file
@@ -98,9 +98,9 @@ namespace Box.V2.Models
         public virtual BoxUser RestoredBy { get; private set; }
 
         /// <summary>
-        /// Represents a version of a file on Box
+        /// The version number of the file version
         /// </summary>
-        [JsonProperty(PropertyName = FieldFileVersion)]
-        public virtual BoxFileVersion FileVersion { get; private set; }
+        [JsonProperty(PropertyName = FieldVersionNumber)]
+        public virtual string VersionNumber { get; private set; }
     }
 }

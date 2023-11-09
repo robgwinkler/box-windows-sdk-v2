@@ -22,7 +22,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetUserInformation_ValidResponse_ValidUser()
         {
             /*** Arrange ***/
@@ -45,7 +44,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetUserInformation_WithField_ValidResponse_ValidUser()
         {
             /*** Arrange ***/
@@ -77,7 +75,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetUserInformation_TrackingCodes()
         {
             /*** Arrange ***/
@@ -120,7 +117,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetUserInformation_ExtraFields()
         {
             /*** Arrange ***/
@@ -159,7 +155,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task UpdateUser_ValidResponse_ValidUser()
         {
             /*** Arrange ***/
@@ -207,7 +202,38 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
+        public async Task RolloutUserFromEnterprise_ValidResponse_ValidUser()
+        {
+            /*** Arrange ***/
+            var responseString = "{\"type\":\"user\",\"id\":\"181216415\",\"name\":\"sean\",\"login\":\"sean+awesome@box.com\",\"created_at\":\"2012-05-03T21:39:11-07:00\",\"modified_at\":\"2012-12-06T18:17:16-08:00\",\"role\":\"admin\",\"language\":\"en\",\"space_amount\":5368709120,\"space_used\":1237179286,\"max_upload_size\":2147483648,\"tracking_codes\":[],\"can_see_managed_users\":true,\"is_sync_enabled\":true,\"status\":\"active\",\"job_title\":\"\",\"phone\":\"6509241374\",\"address\":\"\",\"avatar_url\":\"https://www.box.com/api/avatar/large/181216415\",\"is_exempt_from_device_limits\":false,\"is_exempt_from_login_verification\":false, \"notification_email\": { \"email\": \"test@example.com\", \"is_confirmed\": true}}";
+            IBoxRequest boxRequest = null;
+            Handler.Setup(h => h.ExecuteAsync<BoxUser>(It.IsAny<IBoxRequest>()))
+                .Returns(Task.FromResult<IBoxResponse<BoxUser>>(new BoxResponse<BoxUser>()
+                {
+                    Status = ResponseStatus.Success,
+                    ContentString = responseString
+                }))
+                .Callback<IBoxRequest>(r => boxRequest = r);
+
+            /*** Act ***/
+            var userRequest = new BoxUserRollOutRequest()
+            {
+                Id = "181216415",
+            };
+            BoxUser user = await _usersManager.UpdateUserInformationAsync(userRequest);
+
+            /*** Assert ***/
+
+            // Request check
+            Assert.IsNotNull(boxRequest);
+            Assert.AreEqual(RequestMethod.Put, boxRequest.Method);
+            Assert.AreEqual(UserUri + "181216415", boxRequest.AbsoluteUri.AbsoluteUri);
+            BoxUserRequest payload = JsonConvert.DeserializeObject<BoxUserRequest>(boxRequest.Payload);
+            Assert.AreEqual(userRequest.Id, payload.Id);
+            Assert.AreEqual(boxRequest.Payload, "{\"enterprise\":null,\"id\":\"181216415\"}");
+        }
+
+        [TestMethod]
         public async Task InviteUser_ValidResponse_ValidUser()
         {
             /*** Arrange ***/
@@ -251,7 +277,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetUserInvite_ValidResponse_ValidUser()
         {
             /*** Arrange ***/
@@ -271,7 +296,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetEnterpriseUsers_ValidReponse()
         {
             Handler.Setup(h => h.ExecuteAsync<BoxCollection<BoxUser>>(It.IsAny<IBoxRequest>()))
@@ -289,7 +313,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetEnterpriseUsersWithMarker_ValidReponse()
         {
             Handler.Setup(h => h.ExecuteAsync<BoxCollectionMarkerBased<BoxUser>>(It.IsAny<IBoxRequest>()))
@@ -307,7 +330,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetEnterpriseUsers_EmailSpecialCharacters_ValidReponse()
         {
             IBoxRequest boxRequest = null;
@@ -325,7 +347,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         [ExpectedException(typeof(ArgumentOutOfRangeException))]
         public async Task GetEnterpriseUsers_LimitLow()
         {
@@ -333,7 +354,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         [ExpectedException(typeof(ArgumentOutOfRangeException))]
         public async Task GetEnterpriseUsers_LimitHigh()
         {
@@ -341,7 +361,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task ChangeUsersLogin_ValidReponse()
         {
             /*** Arrange ***/
@@ -389,7 +408,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task CreateEnterpriseUser_ValidReponse()
         {
             /*** Arrange ***/
@@ -454,7 +472,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task DeleteEnterpriseUser_ValidReponse()
         {
             /*** Arrange ***/
@@ -482,7 +499,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task DeleteEmailAliasAsync_ValidReponse()
         {
             /*** Arrange ***/
@@ -510,7 +526,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetUserInformationByUserId_ValidResponse_ValidUser()
         {
             /*** Arrange ***/
@@ -539,7 +554,6 @@ namespace Box.V2.Test
             Assert.AreEqual("user", user.Type);
         }
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetEmailAliases_ValidResponse_ValidUser()
         {
             IBoxRequest boxRequest = null;
@@ -583,7 +597,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task AddEmailAlias_ValidResponse_ValidUser()
         {
             IBoxRequest boxRequest = null;
@@ -616,7 +629,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task MoveUserFolder_ValidResponse_ValidFolder()
         {
             IBoxRequest boxRequest = null;
@@ -650,7 +662,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetMembershipsForUser_ValidResponse_ValidFolder()
         {
             IBoxRequest boxRequest = null;
@@ -682,7 +693,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetUserAvatar_ValidResponse_ValidStream()
         {
             byte[] avatarBytes = { 1, 2, 3 };
@@ -709,6 +719,97 @@ namespace Box.V2.Test
                 Assert.AreEqual(3, result.Length);
 
             }
+        }
+
+        [TestMethod]
+        public async Task AddOrUpdateUserAvatar_ValidResponse_ValidStream()
+        {
+            /*** Arrange ***/
+            var responseString = LoadFixtureFromJson("Fixtures/BoxUsers/AddOrUpdateUserAvatar200.json");
+            BoxMultiPartRequest boxRequest = null;
+            Handler.Setup(h => h.ExecuteAsync<BoxUploadAvatarResponse>(It.IsAny<IBoxRequest>()))
+                .Returns(Task.FromResult<IBoxResponse<BoxUploadAvatarResponse>>(new BoxResponse<BoxUploadAvatarResponse>()
+                {
+                    Status = ResponseStatus.Success,
+                    ContentString = responseString
+                }))
+                .Callback<IBoxRequest>(r => boxRequest = r as BoxMultiPartRequest);
+
+            var fakeStream = new Mock<Stream>();
+            var fileName = "newAvatar.png";
+
+            /*** Act ***/
+            BoxUploadAvatarResponse response = await _usersManager.AddOrUpdateUserAvatarAsync("11111", fakeStream.Object, fileName);
+
+            /*** Assert ***/
+            Assert.IsNotNull(boxRequest);
+            Assert.AreEqual(RequestMethod.Post, boxRequest.Method);
+            Assert.AreEqual(new Uri("https://api.box.com/2.0/users/11111/avatar"), boxRequest.AbsoluteUri.AbsoluteUri);
+            Assert.IsNotNull(boxRequest.Parts[0] as BoxFileFormPart);
+            Assert.AreEqual(fileName, (boxRequest.Parts[0] as BoxFileFormPart).FileName);
+            Assert.AreEqual("image/png", (boxRequest.Parts[0] as BoxFileFormPart).ContentType);
+            Assert.IsTrue(ReferenceEquals(fakeStream.Object, (boxRequest.Parts[0] as BoxFileFormPart).Value));
+
+            Assert.IsNotNull(response.PicUrls);
+            Assert.IsNotNull(response.PicUrls.Preview);
+            Assert.IsNotNull(response.PicUrls.Small);
+            Assert.IsNotNull(response.PicUrls.Large);
+        }
+
+        [TestMethod]
+        public async Task AddOrUpdateUserAvatar_ValidResponse_ValidFileStream()
+        {
+            var responseString = LoadFixtureFromJson("Fixtures/BoxUsers/AddOrUpdateUserAvatar200.json");
+            BoxMultiPartRequest boxRequest = null;
+            Handler.Setup(h => h.ExecuteAsync<BoxUploadAvatarResponse>(It.IsAny<IBoxRequest>()))
+                .Returns(Task.FromResult<IBoxResponse<BoxUploadAvatarResponse>>(new BoxResponse<BoxUploadAvatarResponse>()
+                {
+                    Status = ResponseStatus.Success,
+                    ContentString = responseString
+                }))
+                .Callback<IBoxRequest>(r => boxRequest = r as BoxMultiPartRequest);
+
+            var stream = new FileStream("newAvatar.png", FileMode.OpenOrCreate);
+
+            BoxUploadAvatarResponse response = await _usersManager.AddOrUpdateUserAvatarAsync("11111", stream);
+
+            Assert.IsNotNull(boxRequest);
+            Assert.AreEqual(RequestMethod.Post, boxRequest.Method);
+            Assert.AreEqual(new Uri("https://api.box.com/2.0/users/11111/avatar"), boxRequest.AbsoluteUri.AbsoluteUri);
+            Assert.IsNotNull(boxRequest.Parts[0] as BoxFileFormPart);
+            Assert.AreEqual("newAvatar.png", (boxRequest.Parts[0] as BoxFileFormPart).FileName);
+            Assert.AreEqual("image/png", (boxRequest.Parts[0] as BoxFileFormPart).ContentType);
+            Assert.IsTrue(ReferenceEquals(stream, (boxRequest.Parts[0] as BoxFileFormPart).Value));
+
+            Assert.IsNotNull(response.PicUrls);
+            Assert.IsNotNull(response.PicUrls.Preview);
+            Assert.IsNotNull(response.PicUrls.Small);
+            Assert.IsNotNull(response.PicUrls.Large);
+        }
+
+        [TestMethod]
+        public async Task AddOrUpdateUserAvatar_ValidResponse()
+        {
+            /*** Arrange ***/
+            var responseString = "";
+            IBoxRequest boxRequest = null;
+            Handler.Setup(h => h.ExecuteAsync<BoxEntity>(It.IsAny<IBoxRequest>()))
+                .Returns(Task.FromResult<IBoxResponse<BoxEntity>>(new BoxResponse<BoxEntity>()
+                {
+                    Status = ResponseStatus.Success,
+                    ContentString = responseString
+                })).Callback<IBoxRequest>(r => boxRequest = r);
+
+            /*** Act ***/
+            var result = await _usersManager.DeleteUserAvatarAsync("11111");
+
+            /*** Assert ***/
+            /*** Request ***/
+            Assert.IsNotNull(boxRequest);
+            Assert.AreEqual(RequestMethod.Delete, boxRequest.Method);
+            Assert.AreEqual(new Uri("https://api.box.com/2.0/users/11111/avatar"), boxRequest.AbsoluteUri.AbsoluteUri);
+            /*** Response ***/
+            Assert.AreEqual(true, result);
         }
     }
 }

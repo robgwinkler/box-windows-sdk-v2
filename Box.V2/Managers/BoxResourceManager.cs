@@ -5,7 +5,7 @@ using Box.V2.Extensions;
 using Box.V2.Models;
 using Box.V2.Services;
 using Box.V2.Utility;
-#if NET45
+#if NET462
 using Microsoft.Win32;
 using System.Security;
 #endif
@@ -14,7 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
-using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Box.V2.Managers
@@ -68,14 +68,15 @@ namespace Box.V2.Managers
             return request;
         }
 
-        protected async Task<IBoxResponse<T>> ToResponseAsync<T>(IBoxRequest request, bool queueRequest = false)
+        protected async Task<IBoxResponse<T>> ToResponseAsync<T>(IBoxRequest request, bool queueRequest = false,
+            IBoxConverter converter = null)
             where T : class
         {
             AddDefaultHeaders(request);
-            AddAuthorization(request);
+            await AddAuthorizationAsync(request).ConfigureAwait(false);
             var response = await ExecuteRequest<T>(request, queueRequest).ConfigureAwait(false);
 
-            return response.ParseResults(_converter);
+            return converter != null ? response.ParseResults(converter) : response.ParseResults(_converter);
         }
 
         private async Task<IBoxResponse<T>> ExecuteRequest<T>(IBoxRequest request, bool queueRequest)
@@ -106,33 +107,19 @@ namespace Box.V2.Managers
         {
             OAuthSession newSession = await _auth.RefreshAccessTokenAsync(request.Authorization).ConfigureAwait(false);
             AddDefaultHeaders(request);
-            AddAuthorization(request, newSession.AccessToken);
+            await AddAuthorizationAsync(request, newSession.AccessToken).ConfigureAwait(false);
             return await _service.ToResponseAsync<T>(request).ConfigureAwait(false);
         }
 
-        protected void AddAuthorization(IBoxRequest request, string accessToken = null)
+        protected async Task AddAuthorizationAsync(IBoxRequest request, string accessToken = null)
         {
-            var auth = accessToken ?? _auth.Session.AccessToken;
+            var auth = accessToken ??
+                (_auth.Session ?? await _auth.RefreshAccessTokenAsync(null).ConfigureAwait(false)).AccessToken;
 
-            var authString = _auth.Session.AuthVersion == AuthVersion.V1 ?
-                string.Format(CultureInfo.InvariantCulture, Constants.V1AuthString, _config.ClientId, auth) :
-                string.Format(CultureInfo.InvariantCulture, Constants.V2AuthString, auth);
-
-            var sb = new StringBuilder(authString);
-
-            // Appending device_id is required for accounts that have device pinning enabled on V1 auth
-            if (_auth.Session.AuthVersion == AuthVersion.V1)
-            {
-                sb.Append(string.IsNullOrWhiteSpace(_config.DeviceId) ?
-                    string.Empty :
-                    string.Format("&device_id={0}", _config.DeviceId));
-                sb.Append(string.IsNullOrWhiteSpace(_config.DeviceName) ?
-                    string.Empty :
-                    string.Format("&device_name={0}", _config.DeviceName));
-            }
+            var authString = string.Format(CultureInfo.InvariantCulture, Constants.V2AuthString, auth);
 
             request.Authorization = auth;
-            request.Header(Constants.AuthHeaderKey, sb.ToString());
+            request.Header(Constants.AuthHeaderKey, authString);
         }
 
         /// <summary>
@@ -155,7 +142,7 @@ namespace Box.V2.Managers
             {
                 var response = await ToResponseAsync<BoxCollection<T>>(request).ConfigureAwait(false);
                 var newItems = response.ResponseObject;
-                allItemsCollection.Entries.AddRange(newItems.Entries);
+                allItemsCollection.Entries.AddRange(newItems.Entries ?? new List<T>());
                 allItemsCollection.Order = newItems.Order;
 
                 offset += limit;
@@ -189,7 +176,7 @@ namespace Box.V2.Managers
             {
                 var response = await ToResponseAsync<BoxCollectionMarkerBased<T>>(request).ConfigureAwait(false);
                 var newItems = response.ResponseObject;
-                allItemsCollection.Entries.AddRange(newItems.Entries);
+                allItemsCollection.Entries.AddRange(newItems.Entries ?? new List<T>());
                 allItemsCollection.Order = newItems.Order;
 
                 request.Param("marker", newItems.NextMarker);
@@ -220,7 +207,7 @@ namespace Box.V2.Managers
             {
                 var response = await ToResponseAsync<BoxCollectionMarkerBasedV2<T>>(request).ConfigureAwait(false);
                 var newItems = response.ResponseObject;
-                allItemsCollection.Entries.AddRange(newItems.Entries);
+                allItemsCollection.Entries.AddRange(newItems.Entries ?? new List<T>());
                 allItemsCollection.Order = newItems.Order;
 
                 request.Param("marker", newItems.NextMarker);
@@ -282,7 +269,7 @@ namespace Box.V2.Managers
             {
                 var response = await ToResponseAsync<BoxCollectionMarkerBased<T>>(request).ConfigureAwait(false);
                 var newItems = response.ResponseObject;
-                allItemsCollection.Entries.AddRange(newItems.Entries);
+                allItemsCollection.Entries.AddRange(newItems.Entries ?? new List<T>());
                 allItemsCollection.Order = newItems.Order;
 
                 dynamic body = JObject.Parse(request.Payload);
@@ -307,7 +294,7 @@ namespace Box.V2.Managers
 
         private string GetEnvNameAndVersion()
         {
-#if NET45
+#if NET462
             const string Subkey = @"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full\";
 
             RegistryKey ndpKey;
@@ -315,11 +302,7 @@ namespace Box.V2.Managers
             {
                 ndpKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey(Subkey);
             }
-            catch (UnauthorizedAccessException)
-            {
-                return "";
-            }
-            catch (SecurityException)
+            catch (Exception)
             {
                 return "";
             }
@@ -328,7 +311,7 @@ namespace Box.V2.Managers
             {
                 if (ndpKey != null && ndpKey.GetValue("Release") != null)
                 {
-                    var frameworkVersion = CheckFor45PlusVersion((int)ndpKey.GetValue("Release"));
+                    var frameworkVersion = CheckFor462PlusVersion((int)ndpKey.GetValue("Release"));
                     return frameworkVersion != null ? "env=.NET Framework/" + frameworkVersion : "";
                 }
                 else
@@ -346,10 +329,19 @@ namespace Box.V2.Managers
         }
 
         // Checking the version using >= will enable forward compatibility.
-        private string CheckFor45PlusVersion(int releaseKey)
+        private string CheckFor462PlusVersion(int releaseKey)
         {
+            if (releaseKey >= 533320)
+                return "4.8.1+";
+
+            if (releaseKey >= 528040)
+                return "4.8";
+
+            if (releaseKey >= 461808)
+                return "4.7.2";
+
             if (releaseKey >= 461308)
-                return "4.7.1+";
+                return "4.7.1";
 
             if (releaseKey >= 460798)
                 return "4.7";
@@ -357,34 +349,36 @@ namespace Box.V2.Managers
             if (releaseKey >= 394802)
                 return "4.6.2";
 
-            if (releaseKey >= 394254)
-                return "4.6.1";
-
-            if (releaseKey >= 393295)
-                return "4.6";
-
-            if (releaseKey >= 379893)
-                return "4.5.2";
-
-            if (releaseKey >= 378675)
-                return "4.5.1";
-
-            if (releaseKey >= 378389)
-                return "4.5";
             // This code should never execute. A non-null release key should mean
-            // that 4.5 or later is installed.
+            // that 4.6.2 or later is installed.
             return null;
         }
 
         private string GetNetCoreVersion()
         {
-            var assembly = typeof(System.Runtime.GCSettings).GetTypeInfo().Assembly;
-            var assemblyPath = assembly.CodeBase.Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
-            var netCoreAppIndex = Array.IndexOf(assemblyPath, "Microsoft.NETCore.App");
-            return netCoreAppIndex > 0 && netCoreAppIndex < assemblyPath.Length - 2 ?
-                assemblyPath[netCoreAppIndex + 1] :
-                null;
-        }
+            try
+            {
+                var assembly = typeof(System.Runtime.GCSettings).GetTypeInfo().Assembly;
+                if (assembly?.CodeBase != null)
+                {
+                    var assemblyPath = assembly.CodeBase.Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
+                    var netCoreAppIndex = Array.IndexOf(assemblyPath, "Microsoft.NETCore.App");
+                    return netCoreAppIndex > 0 && netCoreAppIndex < assemblyPath.Length - 2 ?
+                        assemblyPath[netCoreAppIndex + 1] :
+                        null;
+                }
+            }
+            catch
+            {
+                return null;
+            }
 
+#if NETSTANDARD2_0
+            var frameworkVersion = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription;
+            return Regex.Match(frameworkVersion, @"\d+(\.\d+)+").Value;
+#else
+            return null;
+#endif
+        }
     }
 }

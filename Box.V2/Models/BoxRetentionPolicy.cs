@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace Box.V2.Models
 {
@@ -20,6 +22,8 @@ namespace Box.V2.Models
         public const string FieldCanOwnerExtendRetention = "can_owner_extend_retention";
         public const string FieldAreOwnersNotified = "are_owners_notified";
         public const string FieldCustomNotificationRecipients = "custom_notification_recipients";
+        public const string FieldRetentionType = "retention_type";
+        public const string FieldDescription = "description";
 
         /// <summary>
         /// The name given to the retention policy
@@ -87,5 +91,25 @@ namespace Box.V2.Models
         /// </summary>
         [JsonProperty(PropertyName = FieldCustomNotificationRecipients)]
         public virtual List<BoxUser> CustomNotificationRecipients { get; set; }
+
+        /// <summary>
+        /// The type of retention policy. Value is one of modifiable or non-modifiable.
+        /// </summary>
+        [JsonProperty(PropertyName = FieldRetentionType)]
+        [JsonConverter(typeof(StringEnumConverter))]
+        public virtual BoxRetentionType RetentionType { get; set; }
+
+        /// <summary>
+        /// The additional text description of the retention policy.
+        /// </summary>
+        [JsonProperty(PropertyName = FieldDescription)]
+        public virtual string Description { get; set; }
+    }
+
+    public enum BoxRetentionType
+    {
+        modifiable,
+        [EnumMember(Value = "non-modifiable")]
+        non_modifiable
     }
 }

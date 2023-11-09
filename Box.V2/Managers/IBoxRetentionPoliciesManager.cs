@@ -79,6 +79,13 @@ namespace Box.V2.Managers
         Task<BoxRetentionPolicyAssignment> GetRetentionPolicyAssignmentAsync(string retentionPolicyAssignmentId, IEnumerable<string> fields = null);
 
         /// <summary>
+        /// Used to delete a retention policy assignment.
+        /// </summary>
+        /// <param name="retentionPolicyAssignmentId">ID of the retention policy assignment.</param>
+        /// <returns>True if the retention policy assignment was successfully deleted.</returns>
+        Task<bool> DeleteRetentionPolicyAssignmentAsync(string retentionPolicyAssignmentId);
+
+        /// <summary>
         /// Retrieves all file version retentions for the given enterprise.
         /// </summary>
         /// <param name="fields">Attribute(s) to include in the response.</param>
@@ -127,6 +134,6 @@ namespace Box.V2.Managers
         /// <param name="marker">Take from "next_marker" column of a prior call to get the next page.</param>
         /// <param name="autoPaginate">Whether or not to auto-paginate to fetch all items; defaults to false.</param>
         /// <returns>Returns the list of all file versions under retentions for the assignment.</returns>
-        Task<BoxCollectionMarkerBased<BoxFileVersion>> GetFileVersionsUnderRetentionForAssignmentAsync(string retentionPolicyAssignmentId, IEnumerable<string> fields = null, int limit = 100, string marker = null, bool autoPaginate = false);
+        Task<BoxCollectionMarkerBased<BoxFile>> GetFileVersionsUnderRetentionForAssignmentAsync(string retentionPolicyAssignmentId, IEnumerable<string> fields = null, int limit = 100, string marker = null, bool autoPaginate = false);
     }
 }

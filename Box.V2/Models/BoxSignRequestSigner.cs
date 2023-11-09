@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace Box.V2.Models
 {
@@ -18,6 +19,9 @@ namespace Box.V2.Models
         public const string FieldOrder = "order";
         public const string FieldRole = "role";
         public const string FieldSignerDecision = "signer_decision";
+        public const string FieldDeclinedRedirectUrl = "declined_redirect_url";
+        public const string FieldRedirectUrl = "redirect_url";
+        public const string FieldIframeableEmbedUrl = "iframeable_embed_url";
 
         /// <summary>
         /// Email address of the signer.
@@ -67,6 +71,7 @@ namespace Box.V2.Models
         /// Value is one of signer,approver,final_copy_reader
         /// </summary>
         [JsonProperty(PropertyName = FieldRole)]
+        [JsonConverter(typeof(StringEnumConverter))]
         public virtual BoxSignRequestSignerRole Role { get; private set; }
 
         /// <summary>
@@ -74,6 +79,24 @@ namespace Box.V2.Models
         /// </summary>
         [JsonProperty(PropertyName = FieldSignerDecision)]
         public virtual BoxSignRequestSignerDecision SignerDecision { get; private set; }
+
+        /// <summary>
+        /// URL to redirect the signer to if they decline to sign the document.
+        /// </summary>
+        [JsonProperty(PropertyName = FieldDeclinedRedirectUrl)]
+        public virtual Uri DeclinedRedirectUrl { get; private set; }
+
+        /// <summary>
+        /// URL to redirect the signer to after they sign the document.
+        /// </summary>
+        [JsonProperty(PropertyName = FieldRedirectUrl)]
+        public virtual Uri RedirectUrl { get; private set; }
+
+        /// <summary>
+        /// This URL is specifically designed for signing documents within an HTML iframe tag.
+        /// </summary>
+        [JsonProperty(PropertyName = FieldIframeableEmbedUrl)]
+        public virtual string IframeableEmbedUrl { get; private set; }
     }
 
     /// <summary>
@@ -94,6 +117,7 @@ namespace Box.V2.Models
     {
         public const string FieldType = "type";
         public const string FieldCheckboxValue = "checkbox_value";
+        public const string FieldContentType = "content_type";
         public const string FieldDateValue = "date_value";
         public const string FieldDocumentTagId = "document_tag_id";
         public const string FieldPageIndex = "page_index";
@@ -103,6 +127,7 @@ namespace Box.V2.Models
         /// Type of input.
         /// </summary>
         [JsonProperty(PropertyName = FieldType)]
+        [JsonConverter(typeof(StringEnumConverter))]
         public virtual BoxSignRequestSingerInputType Type { get; private set; }
 
         /// <summary>
@@ -110,6 +135,13 @@ namespace Box.V2.Models
         /// </summary>
         [JsonProperty(PropertyName = FieldCheckboxValue)]
         public virtual bool? CheckboxValue { get; private set; }
+
+        /// <summary>
+        /// Content type of input.
+        /// </summary>
+        [JsonProperty(PropertyName = FieldContentType)]
+        [JsonConverter(typeof(StringEnumConverter))]
+        public virtual BoxSignRequestSingerInputContentType ContentType { get; private set; }
 
         /// <summary>
         /// Date prefill value.
@@ -148,6 +180,26 @@ namespace Box.V2.Models
     }
 
     /// <summary>
+    /// Content type of input.
+    /// </summary>
+    public enum BoxSignRequestSingerInputContentType
+    {
+        initial,
+        stamp,
+        signature,
+        company,
+        title,
+        email,
+        full_name,
+        first_name,
+        last_name,
+        text,
+        date,
+        checkbox,
+        attachment
+    }
+
+    /// <summary>
     /// Final decision made by the signer.
     /// </summary>
     public class BoxSignRequestSignerDecision
@@ -159,6 +211,7 @@ namespace Box.V2.Models
         /// Type of decision made by the signer.
         /// </summary>
         [JsonProperty(PropertyName = FieldType)]
+        [JsonConverter(typeof(StringEnumConverter))]
         public virtual BoxSignRequestSingerDecisionType Type { get; private set; }
 
         /// <summary>

@@ -2,6 +2,171 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [5.6.0](https://github.com/box/box-windows-sdk-v2/compare/v5.5.0...v5.6.0) (2023-09-25)
+
+
+### **New Features and Enhancements:**
+
+* Support `iframeable_embed_url` for sign request ([#925](https://github.com/box/box-windows-sdk-v2/issues/925)) ([e9de994](https://github.com/box/box-windows-sdk-v2/commit/e9de994cea97afcc1c3bc52ddf1cc023b9ee731c))
+
+## [5.5.0](https://github.com/box/box-windows-sdk-v2/compare/v5.4.0...v5.5.0) (2023-09-20)
+
+
+### **New Features and Enhancements:**
+
+* Add shared link header support in file and folder managers ([#923](https://github.com/box/box-windows-sdk-v2/issues/923)) ([ffbfc72](https://github.com/box/box-windows-sdk-v2/commit/ffbfc72289c70cdd91ea500326944a40b89993e3))
+
+## [5.4.0](https://github.com/box/box-windows-sdk-v2/compare/v5.3.0...v5.4.0) (2023-09-07)
+
+
+### **New Features and Enhancements:**
+
+* Support Sign Templates and new Sign Request statuses ([#920](https://github.com/box/box-windows-sdk-v2/issues/920)) ([78580fb](https://github.com/box/box-windows-sdk-v2/commit/78580fbd3de553273970376b96bc28c7c5614a97))
+
+## [5.3.0](https://github.com/box/box-windows-sdk-v2/compare/v5.2.2...v5.3.0) (2023-09-04)
+
+
+### **New Features and Enhancements:**
+
+* add `attachment` content type to `SignRequestSigner` ([#913](https://github.com/box/box-windows-sdk-v2/issues/913)) ([ad612ff](https://github.com/box/box-windows-sdk-v2/commit/ad612ffc7821a9ecbc180e3dbeefe16d3e397820))
+
+### **Bug Fixes:**
+
+* replace deprecated `BouncyCastle` library ([#909](https://github.com/box/box-windows-sdk-v2/issues/909)) ([f00f2af](https://github.com/box/box-windows-sdk-v2/commit/f00f2af9c5277b42e6a62060c1b0229ecff0203e))
+
+
+### [5.2.2](https://github.com/box/box-windows-sdk-v2/compare/v5.2.1...v5.2.2) (2023-05-23)
+
+
+### **Bug Fixes:**
+
+* catch exception when .net core version cannot be determined ([#906](https://github.com/box/box-windows-sdk-v2/issues/906)) ([e3be209](https://github.com/box/box-windows-sdk-v2/commit/e3be209b20a5c323f547d7634663883613959180))
+
+### [5.2.1](https://github.com/box/box-windows-sdk-v2/compare/v5.2.0...v5.2.1) (2023-04-18)
+
+
+### **Bug Fixes:**
+
+* Catch all exceptions when getting User Agent header ([#901](https://github.com/box/box-windows-sdk-v2/issues/901)) ([75d8874](https://github.com/box/box-windows-sdk-v2/commit/75d887470698a5f312610cebd58be58aee7eaa9b))
+
+## [5.2.0](https://github.com/box/box-windows-sdk-v2/compare/v5.1.0...v5.2.0) (2023-03-14)
+
+
+### **New Features and Enhancements:**
+
+* add `Id` to `MetadataTemplateField` ([#890](https://github.com/box/box-windows-sdk-v2/issues/890)) ([b7fe214](https://github.com/box/box-windows-sdk-v2/commit/b7fe2149e1a0ade8573b497b7bb36e9f3c4f4a82))
+* add `start_date_field` and `description` to retention policies ([#888](https://github.com/box/box-windows-sdk-v2/issues/888)) ([100b722](https://github.com/box/box-windows-sdk-v2/commit/100b722ce4909395c00b527677564f37a61ec2cb))
+* add configurable `JWTAudience` claim ([#897](https://github.com/box/box-windows-sdk-v2/issues/897)) ([50219fd](https://github.com/box/box-windows-sdk-v2/commit/50219fdfd553d6335b6f0b4341719b09680c4ba0))
+* add shared link support to `GetFolderItemsAsync` ([#892](https://github.com/box/box-windows-sdk-v2/issues/892)) ([0eba85c](https://github.com/box/box-windows-sdk-v2/commit/0eba85c693763472c51fe81cbc43222305e9eefb))
+
+### **Bug Fixes:**
+
+* Use fixed value of `aud` field in `JWT` claim ([#896](https://github.com/box/box-windows-sdk-v2/issues/896)) ([8c9982d](https://github.com/box/box-windows-sdk-v2/commit/8c9982d160ec4806c796ee2621b1811232ea59c1))
+
+
+## [5.1.0](https://github.com/box/box-windows-sdk-v2/compare/v5.0.0...v5.1.0) (2023-01-17)
+
+
+### **New Features and Enhancements:**
+
+* `BoxCCGAuth` add User and Admin clients factory methods without initial token ([#883](https://github.com/box/box-windows-sdk-v2/issues/883)) ([c1337fc](https://github.com/box/box-windows-sdk-v2/commit/c1337fc9d765bf7d4bc1757ea832bec92a602f76))
+
+## [5.0.0](https://github.com/box/box-windows-sdk-v2/compare/v4.6.0...v5.0.0) (2023-01-12)
+
+
+### ⚠ BREAKING CHANGES
+
+* upgrade .net framework to 4.6.2 (#881)
+* remove deprecated methods (#881)
+* remove `use_index` references (#881)
+* return proper object from `GetFileVersionsUnderRetentionForAssignmentAsync`(#881)
+
+### **New Features and Enhancements:**
+
+* upgrade .net framework to 4.6.2 ([#881](https://github.com/box/box-windows-sdk-v2/issues/881)) ([f1989aa](https://github.com/box/box-windows-sdk-v2/commit/f1989aa94cd085ad4bec04b4ebedb04f40455569)), closes [#863](https://github.com/box/box-windows-sdk-v2/issues/863) 
+* remove deprecated methods ([#881](https://github.com/box/box-windows-sdk-v2/issues/881)) ([f1989aa](https://github.com/box/box-windows-sdk-v2/commit/f1989aa94cd085ad4bec04b4ebedb04f40455569)), closes [#874](https://github.com/box/box-windows-sdk-v2/issues/874)
+* remove `use_index` references ([#881](https://github.com/box/box-windows-sdk-v2/issues/881)) ([f1989aa](https://github.com/box/box-windows-sdk-v2/commit/f1989aa94cd085ad4bec04b4ebedb04f40455569)), closes [#870](https://github.com/box/box-windows-sdk-v2/issues/870)
+
+### **Bug Fixes:**
+
+* Added pagination option to `IBoxFilesManager#ViewVersionsAsync` ([#869](https://github.com/box/box-windows-sdk-v2/issues/869)) ([2324495](https://github.com/box/box-windows-sdk-v2/commit/232449531440227a0c8b3489ceda813fe4f4a73f)), closes [#866](https://github.com/box/box-windows-sdk-v2/issues/866)
+* return proper object from `GetFileVersionsUnderRetentionForAssignmentAsync` ([#881](https://github.com/box/box-windows-sdk-v2/issues/881)) ([f1989aa](https://github.com/box/box-windows-sdk-v2/commit/f1989aa94cd085ad4bec04b4ebedb04f40455569)), closes [#875](https://github.com/box/box-windows-sdk-v2/issues/875)
+
+## [4.6.0](https://github.com/box/box-windows-sdk-v2/compare/v4.5.0...v4.6.0) (2022-10-18)
+
+
+### **New Features and Enhancements:**
+
+* Add `redirect_url` and `declined_redirect_url` to Sign Request ([#853](https://github.com/box/box-windows-sdk-v2/issues/853)) ([5ef2f18](https://github.com/box/box-windows-sdk-v2/commit/5ef2f18985d8c3b8e7c0cdba5709785bfb1d5f34))
+* Add support for modifiable retention policies & enable deleting retention policy assignment ([#856](https://github.com/box/box-windows-sdk-v2/issues/856)) ([564904f](https://github.com/box/box-windows-sdk-v2/commit/564904fa2ce0b1881a2f07b80cc3bb3e648310d0))
+
+## [4.5.0](https://github.com/box/box-windows-sdk-v2/compare/v4.4.0...v4.5.0) (2022-08-24)
+
+
+### **New Features and Enhancements:**
+
+* Add `content-type` field to sign request ([#850](https://github.com/box/box-windows-sdk-v2/issues/850)) ([054d3e1](https://github.com/box/box-windows-sdk-v2/commit/054d3e1a5f44b6a4a0292e8f9444266b2de0fff0))
+* expose `effective_access` in `BoxSharedLink` [#843](https://github.com/box/box-windows-sdk-v2/issues/843) ([d84ddd4](https://github.com/box/box-windows-sdk-v2/commit/d84ddd48aac489ecdd1d9dc740a7672cb064b0ca))
+
+
+### **Bug Fixes:**
+
+* fix null reference exception when it's not possible to get `runtime` version from the assembly ([#851](https://github.com/box/box-windows-sdk-v2/issues/851)) ([77046fb](https://github.com/box/box-windows-sdk-v2/commit/77046fb0c1ce80b6e7e2dc30058ed275e46e990c))
+* replace infinite retries with exponential backoff strategy in file representations ([#835](https://github.com/box/box-windows-sdk-v2/issues/835)) ([f2a5713](https://github.com/box/box-windows-sdk-v2/commit/f2a57136078de8b1fc59ec2c4a9e98c062d9d19b))
+
+## [4.4.0](https://github.com/box/box-windows-sdk-v2/compare/v4.3.1...v4.4.0) (2022-06-14)
+
+
+### **New Features and Enhancements:**
+
+* add `can_edit` field to `SharedLink` ([#831](https://github.com/box/box-windows-sdk-v2/issues/831)) ([e0d4197](https://github.com/box/box-windows-sdk-v2/commit/e0d4197070db0dbd947f4a51a6bbb1e01c0b0cdf))
+* add `version_number` to `BoxFileVersion` ([#820](https://github.com/box/box-windows-sdk-v2/issues/820)) ([f174358](https://github.com/box/box-windows-sdk-v2/commit/f174358973caefc9262df480208341fd8233dc7f))
+* add upload and delete support for Avatar API ([#829](https://github.com/box/box-windows-sdk-v2/issues/829)) ([4dcb84a](https://github.com/box/box-windows-sdk-v2/commit/4dcb84ade78d6bd0bc621ff2ed7f5f886486858a))
+
+### **Bug Fixes:**
+
+* Fix initialization of `BoxAPIException` object ([#828](https://github.com/box/box-windows-sdk-v2/issues/828)) ([a298f01](https://github.com/box/box-windows-sdk-v2/commit/a298f01187f84200825ec6ed4748fe8bbd717d11))
+* properly dispose response on exception ([#819](https://github.com/box/box-windows-sdk-v2/issues/819)) ([8415bd3](https://github.com/box/box-windows-sdk-v2/commit/8415bd3dbe42910b99f99535247a26f8d8e645c1))
+
+
+### [4.3.1](https://github.com/box/box-windows-sdk-v2/compare/v4.3.0...v4.3.1) (2022-04-19)
+
+
+### **Bug Fixes:**
+
+* simplify base `urls` usage ([#815](https://github.com/box/box-windows-sdk-v2/issues/815)) ([f8e7344](https://github.com/box/box-windows-sdk-v2/commit/f8e73447afa5c0a893c3c4ace922fc360a376f66))
+
+## [4.3.0](https://github.com/box/box-windows-sdk-v2/compare/v4.2.0...v4.3.0) (2022-04-01)
+
+
+### **New Features and Enhancements:**
+
+* add `SourceLink` support for Core project ([#795](https://github.com/box/box-windows-sdk-v2/issues/795)) ([a9cbede](https://github.com/box/box-windows-sdk-v2/commit/a9cbedece2ffb4f832be880bebf35b715c9cb28b))
+
+
+### **Bug Fixes:**
+
+* add missing enum to string parsing in several places ([#813](https://github.com/box/box-windows-sdk-v2/issues/813)) ([e370282](https://github.com/box/box-windows-sdk-v2/commit/e3702826216132dfe1fb061af95a8d9700f114d4))
+* properly cast response when uploading a new file version using session ([#810](https://github.com/box/box-windows-sdk-v2/issues/810)) ([73d877f](https://github.com/box/box-windows-sdk-v2/commit/73d877ff679b5999ea50cdfa68f14b0e2169ea65))
+
+## [4.2.0](https://github.com/box/box-windows-sdk-v2/compare/v4.1.0...v4.2.0) (2022-02-10)
+
+
+### **Bug Fixes:**
+
+* correctly pass null when rolling out user from the enterprise ([#792](https://github.com/box/box-windows-sdk-v2/issues/792)) ([c85c573](https://github.com/box/box-windows-sdk-v2/commit/c85c5735865b7dd97ffa1428a8f57d2edff6811b))
+* Creating BoxAuthenticationFailedException no longer throws an exception ([#790](https://github.com/box/box-windows-sdk-v2/issues/790)) ([55a706e](https://github.com/box/box-windows-sdk-v2/commit/55a706e4091271aa55208a260b2f4f96e1527698))
+* Null Argument Exception in AutoPaginate ([#666](https://github.com/box/box-windows-sdk-v2/issues/666)) ([c61f08c](https://github.com/box/box-windows-sdk-v2/commit/c61f08cc02d5c95ff71ef700e97393a0dc3dc890))
+
+
+### **New Features and Enhancements:**
+
+* add admin_logs_streaming support ([#797](https://github.com/box/box-windows-sdk-v2/issues/797)) ([a775e1e](https://github.com/box/box-windows-sdk-v2/commit/a775e1e5c7696a1e5f82b5dc7edbed8eb09f640d))
+* add Client Credentials Grant auth support ([#799](https://github.com/box/box-windows-sdk-v2/issues/799)) ([b8a64ca](https://github.com/box/box-windows-sdk-v2/commit/b8a64ca3887298feccef5185f6bfec4c3771b5a9))
+* add disposition_at field to the File object ([#793](https://github.com/box/box-windows-sdk-v2/issues/793)) ([2766a91](https://github.com/box/box-windows-sdk-v2/commit/2766a914fad1eb40371cd4430b3450360088b331))
+* add possibility to set auth token uri in BoxConfig ([#794](https://github.com/box/box-windows-sdk-v2/issues/794)) ([ae8cd8b](https://github.com/box/box-windows-sdk-v2/commit/ae8cd8b91dd91b8a786e53ff5b3501d2700686a4))
+* deprecate index_name in ExecuteMetadataQuery ([#800](https://github.com/box/box-windows-sdk-v2/issues/800)) ([6a6a0e4](https://github.com/box/box-windows-sdk-v2/commit/6a6a0e4a0e41ec70ec33acacba00bee6c7ee881f))
+
 ## [4.1.0](https://github.com/box/box-windows-sdk-v2/compare/v4.0.0...v4.1.0) (2021-12-14)
 
 
@@ -16,27 +181,30 @@ All notable changes to this project will be documented in this file. See [standa
 * add file request api ([#777](https://github.com/box/box-windows-sdk-v2/issues/777)) ([1098f75](https://github.com/box/box-windows-sdk-v2/commit/1098f75983e2d784521f13b8d53df0e55d03203b))
 * add vanity_name to SharedLink ([#782](https://github.com/box/box-windows-sdk-v2/issues/782)) ([00a1e26](https://github.com/box/box-windows-sdk-v2/commit/00a1e265569d76c2c9593aa259202d7febef629c))
 
-## 4.0.0 [2021-11-02]
+## [4.0.0](https://github.com/box/box-windows-sdk-v2/compare/v3.26.0...v4.0.0) (2021-11-02)
 
-**Breaking changes:**
-- Extract interfaces for BoxClient and Managers to improve testability ([#603](https://github.com/box/box-windows-sdk-v2/pull/603))
-- Add BoxConfigBuilder and make BoxConfig immutable ([#737](https://github.com/box/box-windows-sdk-v2/pull/737))
-- Expose tasks from async methods ([#742](https://github.com/box/box-windows-sdk-v2/pull/742))
-- Use DateTimeOffset instead of DateTime ([#749](https://github.com/box/box-windows-sdk-v2/pull/749))
-- Rework returned exceptions ([#753](https://github.com/box/box-windows-sdk-v2/pull/753))
-- Upgrade .NET Standard to 2.0 ([#755](https://github.com/box/box-windows-sdk-v2/pull/755))
 
-**New Features and Enhancements:**
-- Add ability to get files under retention for assignment and file versions under retention for assignment ([#734](https://github.com/box/box-windows-sdk-v2/pull/734))
-- Add `is_collaboration_restricted_to_enterprise` flag support for `Folder` update ([#732](https://github.com/box/box-windows-sdk-v2/pull/732))
-- Replace insensitive language ([#738](https://github.com/box/box-windows-sdk-v2/pull/738))
-- Add new, easier to use method for create terms of service user status ([#740](https://github.com/box/box-windows-sdk-v2/pull/740))
-- Allow sort and direction parameter to be passed in when getting trashed items ([#754](https://github.com/box/box-windows-sdk-v2/pull/754))
-- Add support for Task completion_rule field ([#758](https://github.com/box/box-windows-sdk-v2/pull/758))
-- Add BoxSign API support ([#765](https://github.com/box/box-windows-sdk-v2/pull/765))
+### **Breaking changes:**
 
-**Bug Fixes:**
-- Fix `Cannot access a closed Stream.Request` exception during upload ([#739](https://github.com/box/box-windows-sdk-v2/pull/739)) ([#757](https://github.com/box/box-windows-sdk-v2/pull/757))
+* Extract interfaces for BoxClient and Managers to improve testability ([#603](https://github.com/box/box-windows-sdk-v2/pull/603))
+* Add BoxConfigBuilder and make BoxConfig immutable ([#737](https://github.com/box/box-windows-sdk-v2/pull/737))
+* Expose tasks from async methods ([#742](https://github.com/box/box-windows-sdk-v2/pull/742))
+* Use DateTimeOffset instead of DateTime ([#749](https://github.com/box/box-windows-sdk-v2/pull/749))
+* Rework returned exceptions ([#753](https://github.com/box/box-windows-sdk-v2/pull/753))
+* Upgrade .NET Standard to 2.0 ([#755](https://github.com/box/box-windows-sdk-v2/pull/755))
+
+### **New Features and Enhancements:**
+
+* Add ability to get files under retention for assignment and file versions under retention for assignment ([#734](https://github.com/box/box-windows-sdk-v2/pull/734))
+* Add `is_collaboration_restricted_to_enterprise` flag support for `Folder` update ([#732](https://github.com/box/box-windows-sdk-v2/pull/732))
+* Replace insensitive language ([#738](https://github.com/box/box-windows-sdk-v2/pull/738))
+* Add new, easier to use method for create terms of service user status ([#740](https://github.com/box/box-windows-sdk-v2/pull/740))
+* Allow sort and direction parameter to be passed in when getting trashed items ([#754](https://github.com/box/box-windows-sdk-v2/pull/754))
+* Add support for Task completion_rule field ([#758](https://github.com/box/box-windows-sdk-v2/pull/758))
+* Add BoxSign API support ([#765](https://github.com/box/box-windows-sdk-v2/pull/765))
+
+### **Bug Fixes:**
+* Fix `Cannot access a closed Stream.Request` exception during upload ([#739](https://github.com/box/box-windows-sdk-v2/pull/739)) ([#757](https://github.com/box/box-windows-sdk-v2/pull/757))
 
 ## 3.26.0 [2021-04-01]
 
@@ -239,3 +407,17 @@ All notable changes to this project will be documented in this file. See [standa
 - New operation on [Metadata](https://github.com/box/box-windows-sdk-v2/blob/main/Box.V2/Managers/BoxMetadataManager.cs#L1) endpoint
 - Progress on [Chunked Upload New File](https://github.com/box/box-windows-sdk-v2/blob/main/Box.V2/Managers/BoxFilesManager.cs#L463)
 - Minor bug fixes
+
+
+
+
+
+
+
+
+
+
+
+
+
+

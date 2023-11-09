@@ -30,10 +30,14 @@
               "checkbox_value": true,
               "date_value": "2021-04-26T08:12:13.982Z",
               "type": "text",
-              "page_index": 4
+              "page_index": 4,
+              "content_type": "checkbox"
             }
           ],
-          "embed_url": "https://example.com"
+          "embed_url": "https://example.com",
+          "redirect_url": "https://box.com/redirect_url_signer_1",
+          "declined_redirect_url": "https://box.com/declined_redirect_url_signer_1",
+          "iframeable_embed_url": "https://app.box.com/embed/sign/document/bf7aaac6/"
         }
       ],
       "source_files": [
@@ -72,6 +76,8 @@
       "type": "sign-request",
       "id": "12345",
       "prepare_url": "https://prepareurl.com",
+      "redirect_url": "https://box.com/redirect_url",
+      "declined_redirect_url": "https://box.com/declined_redirect_url",
       "signing_log": {
         "id": "12345",
         "etag": "1",
@@ -104,7 +110,8 @@
         ],
         "is_ready_for_download": true
       },
-      "auto_expire_at": "2021-04-26T08:12:13.982Z"
+      "auto_expire_at": "2021-04-26T08:12:13.982Z",
+      "template_id": "12345"
     }
   ]
 }

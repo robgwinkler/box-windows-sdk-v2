@@ -20,7 +20,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task CreateRetentionPolicy_OptionalParams_Success()
         {
             /*** Arrange ***/
@@ -29,6 +28,8 @@ namespace Box.V2.Test
             var policyType = "finite";
             var policyAction = "permanently_delete";
             var notifiedUserID = "12345";
+            var retentionType = BoxRetentionType.non_modifiable;
+            var description = "Policy to retain all reports for at least one month";
             var responseString = "{"
                 + "\"type\": \"retention_policy\","
                 + "\"id\": \"123456789\","
@@ -47,12 +48,14 @@ namespace Box.V2.Test
                 + "\"modified_at\": null,"
                 + "\"can_owner_extend_retention\": true,"
                 + "\"are_owners_notified\": true,"
+                + "\"description\": \"Policy to retain all reports for at least one month\","
                 + "\"custom_notification_recipients\": ["
                 + "  {"
                 + "    \"type\": \"user\","
                 + "    \"id\": \"" + notifiedUserID + "\""
                 + "  }"
-                + "]"
+                + "],"
+                + "\"retention_type\": \"non-modifiable\""
                 + "}";
             Handler.Setup(h => h.ExecuteAsync<BoxRetentionPolicy>(It.IsAny<IBoxRequest>()))
                 .Returns(Task.FromResult<IBoxResponse<BoxRetentionPolicy>>(new BoxResponse<BoxRetentionPolicy>()
@@ -65,7 +68,7 @@ namespace Box.V2.Test
             var requestParams = new BoxRetentionPolicyRequest
             {
                 AreOwnersNotified = true,
-                CanOwnerExtendRetention = true
+                CanOwnerExtendRetention = true,
             };
             var notifiedUser = new BoxRequestEntity
             {
@@ -77,6 +80,8 @@ namespace Box.V2.Test
             requestParams.PolicyType = policyType;
             requestParams.RetentionLength = retentionLength;
             requestParams.DispositionAction = policyAction;
+            requestParams.RetentionType = retentionType;
+            requestParams.Description = description;
             BoxRetentionPolicy results = await _retentionPoliciesManager.CreateRetentionPolicyAsync(requestParams);
 
             /*** Assert ***/
@@ -84,15 +89,16 @@ namespace Box.V2.Test
             Assert.AreEqual(policyName, results.PolicyName);
             Assert.AreEqual(policyType, results.PolicyType);
             Assert.AreEqual(retentionLength.ToString(), results.RetentionLength);
+            Assert.AreEqual(retentionType, results.RetentionType);
             Assert.AreEqual(true, results.CanOwnerExtendRetention);
             Assert.AreEqual(true, results.AreOwnersNotified);
             Assert.IsNotNull(results.CustomNotificationRecipients);
             Assert.AreEqual(1, results.CustomNotificationRecipients.Count);
             Assert.AreEqual(notifiedUserID, results.CustomNotificationRecipients[0].Id);
+            Assert.AreEqual(description, results.Description);
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task AssignPolicyToMetadataTemplate_OptionalParams_Success()
         {
             /*** Arrange ***/
@@ -115,6 +121,7 @@ namespace Box.V2.Test
               + "  \"login\": \"sean@box.com\""
               + "},"
               + "\"assigned_at\": \"2015-07-20T14:28:09-07:00\","
+              + "\"start_date_field\": \"upload_date\","
               + "\"filter_fields\": ["
               + "  {"
               + "    \"field\": \"foo\","
@@ -154,7 +161,8 @@ namespace Box.V2.Test
                     field = "baz",
                     value = 42
                 }
-            }
+            },
+                StartDateField = "upload_date"
             };
             BoxRetentionPolicyAssignment result = await _retentionPoliciesManager.CreateRetentionPolicyAssignmentAsync(assignmentParams);
 
@@ -165,10 +173,27 @@ namespace Box.V2.Test
             Assert.AreEqual("bar", result.FilterFields[0].Value);
             Assert.AreEqual("baz", result.FilterFields[1].Field);
             Assert.AreEqual(42.ToString(), result.FilterFields[1].Value);
+            Assert.AreEqual("upload_date", result.StartDateField);
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
+        public async Task DeleteRetentionPolicyAssignment_ValidRequest_Success()
+        {
+            /*** Arrange ***/
+            var responseString = "";
+            Handler.Setup(h => h.ExecuteAsync<BoxRetentionPolicyAssignment>(It.IsAny<IBoxRequest>()))
+                .Returns(Task.FromResult<IBoxResponse<BoxRetentionPolicyAssignment>>(new BoxResponse<BoxRetentionPolicyAssignment>()
+                {
+                    Status = ResponseStatus.Success,
+                    ContentString = responseString
+                }));
+            bool result = await _retentionPoliciesManager.DeleteRetentionPolicyAssignmentAsync("12345");
+
+            /*** Assert ***/
+            Assert.IsTrue(result);
+        }
+
+        [TestMethod]
         public async Task GetFileVersionRetentions_OptionalParams_Success()
         {
             /*** Arrange ***/
@@ -205,7 +230,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetFilesUnderRetentionForAssignment_ValidResponse()
         {
             /*** Arrange ***/
@@ -237,15 +261,14 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetFileVersionsUnderRetentionForAssignment_ValidResponse()
         {
             /*** Arrange ***/
             var retentionPolicyAssignmentId = "12345";
             var responseString = "{ \"entries\": [{ \"id\": 12345, \"etag\": 1, \"type\": \"file_version\", \"sequence_id\": 3, \"name\": \"Contract.pdf\", \"sha1\": \"85136C79CBF9FE36BB9D05D0639C70C265C18D37\", \"file_version\": { \"id\": 123456, \"type\": \"file_version\", \"sha1\": \"134b65991ed521fcfe4724b7d814ab8ded5185dc\" }, \"applied_at\": \"2012-12-12T10:53:43-08:00\" } ], \"limit\": 1000, \"marker\": \"some marker\" }";
             IBoxRequest boxRequest = null;
-            Handler.Setup(h => h.ExecuteAsync<BoxCollectionMarkerBased<BoxFileVersion>>(It.IsAny<IBoxRequest>()))
-                .Returns(Task.FromResult<IBoxResponse<BoxCollectionMarkerBased<BoxFileVersion>>>(new BoxResponse<BoxCollectionMarkerBased<BoxFileVersion>>()
+            Handler.Setup(h => h.ExecuteAsync<BoxCollectionMarkerBased<BoxFile>>(It.IsAny<IBoxRequest>()))
+                .Returns(Task.FromResult<IBoxResponse<BoxCollectionMarkerBased<BoxFile>>>(new BoxResponse<BoxCollectionMarkerBased<BoxFile>>()
                 {
                     Status = ResponseStatus.Success,
                     ContentString = responseString
@@ -253,7 +276,7 @@ namespace Box.V2.Test
                 .Callback<IBoxRequest>(r => boxRequest = r);
 
             /*** Act ***/
-            BoxCollectionMarkerBased<BoxFileVersion> results = await _retentionPoliciesManager.GetFileVersionsUnderRetentionForAssignmentAsync(retentionPolicyAssignmentId);
+            BoxCollectionMarkerBased<BoxFile> results = await _retentionPoliciesManager.GetFileVersionsUnderRetentionForAssignmentAsync(retentionPolicyAssignmentId);
 
             /*** Assert ***/
 
@@ -265,7 +288,7 @@ namespace Box.V2.Test
             // Response check
             Assert.AreEqual("12345", results.Entries[0].Id);
             Assert.AreEqual("Contract.pdf", results.Entries[0].Name);
-            Assert.AreEqual("file_version", results.Entries[0].Type);
+            Assert.AreEqual("file", results.Entries[0].Type);
             Assert.AreEqual("file_version", results.Entries[0].FileVersion.Type);
         }
     }

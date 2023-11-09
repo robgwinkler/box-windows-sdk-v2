@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace Box.V2.Models.Request
 {
@@ -73,14 +75,32 @@ namespace Box.V2.Models.Request
         public List<BoxSignRequestSignerCreate> Signers { get; set; }
 
         /// <summary>
-        /// List of files to create a signing document from.This is currently limited to one file.Only the ID and type fields are required for each file.
+        /// List of files to create a signing document from. This is currently limited to ten files. Only the ID and type fields are required for each file.
         /// </summary>
         [JsonProperty(PropertyName = "source_files")]
         public List<BoxSignRequestCreateSourceFile> SourceFiles { get; set; }
+
+        /// <summary>
+        /// URL to redirect the signer to if they decline to sign the document.
+        /// </summary>
+        [JsonProperty(PropertyName = "declined_redirect_url")]
+        public Uri DeclinedRedirectUrl { get; set; }
+
+        /// <summary>
+        /// URL to redirect the signer to after they sign the document.
+        /// </summary>
+        [JsonProperty(PropertyName = "redirect_url")]
+        public Uri RedirectUrl { get; set; }
+
+        /// <summary>
+        /// The ID of sign template to use to create the sign request.
+        /// </summary>
+        [JsonProperty(PropertyName = "template_id")]
+        public string TemplateId { get; set; }
     }
 
     /// <summary>
-    /// List of files to create a signing document from.This is currently limited to one file.Only the ID and type fields are required for each file.
+    /// List of files to create a signing document from. This is currently limited to ten files. Only the ID and type fields are required for each file.
     /// </summary>
     public class BoxSignRequestCreateSourceFile
     {
@@ -156,6 +176,19 @@ namespace Box.V2.Models.Request
         /// Value is one of signer,approver,final_copy_reader
         /// </summary>
         [JsonProperty(PropertyName = "role")]
+        [JsonConverter(typeof(StringEnumConverter))]
         public BoxSignRequestSignerRole? Role { get; set; }
+
+        /// <summary>
+        /// The URL to redirect the signer to if they decline to sign the document.
+        /// </summary>
+        [JsonProperty(PropertyName = "declined_redirect_url")]
+        public Uri DeclinedRedirectUrl { get; set; }
+
+        /// <summary>
+        /// The URL to redirect the signer to after they sign the document.
+        /// </summary>
+        [JsonProperty(PropertyName = "redirect_url")]
+        public Uri RedirectUrl { get; set; }
     }
 }

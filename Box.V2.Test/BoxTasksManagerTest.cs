@@ -4,6 +4,7 @@ using Box.V2.Config;
 using Box.V2.Managers;
 using Box.V2.Models;
 using Box.V2.Models.Request;
+using Box.V2.Test.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Newtonsoft.Json;
@@ -21,7 +22,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task CreateTaskAssignment_ValidResponse()
         {
             /*** Arrange ***/
@@ -104,7 +104,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task UpdateTaskAssignment_ValidResponse()
         {
             /*** Arrange ***/
@@ -180,7 +179,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetTaskAssignment_ValidResponse()
         {
             /*** Arrange ***/
@@ -248,7 +246,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetTaskAssignment_TranslatedStatus()
         {
             /*** Arrange ***/
@@ -273,8 +270,8 @@ namespace Box.V2.Test
                                         ""completed_at"": null,
                                         ""assigned_at"": ""2013-05-10T11:43:41-07:00"",
                                         ""reminded_at"": null,
-                                        ""resolution_state"": ""未完了"",
-                                        ""status"": ""incomplete"",
+                                        ""resolution_state"": ""incomplete"",
+                                        ""status"": ""未完了"",
                                         ""assigned_by"": {
                                             ""type"": ""user"",
                                             ""id"": ""33333"",
@@ -298,13 +295,12 @@ namespace Box.V2.Test
 
             /*** Assert ***/
 
-            Assert.AreEqual("incomplete", result.Status);
-            Assert.AreEqual("未完了", result.LocalizedStatus);
+            Assert.AreEqual("incomplete", result.LocalizedStatus);
+            Assert.AreEqual("未完了", result.Status);
             Assert.AreEqual(ResolutionStateType.incomplete, result.ResolutionState);
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task DeleteTaskAssignment_TaskAssignmentDeleted()
         {
             /*** Arrange ***/
@@ -336,7 +332,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task CreateTask_ValidResponse()
         {
             /*** Arrange ***/
@@ -417,7 +412,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task CreateTask_WithCompletionRule()
         {
             /*** Arrange ***/
@@ -483,13 +477,13 @@ namespace Box.V2.Test
             Assert.AreEqual(taskCreateRequest.Item.Type, payload.Item.Type);
             Assert.AreEqual(taskCreateRequest.Message, payload.Message);
             Assert.AreEqual(taskCreateRequest.CompletionRule, payload.CompletionRule);
+            Assert.IsTrue(boxRequest.Payload.ContainsKeyValue("completion_rule", "any_assignee"));
 
             //Response check
             Assert.AreEqual(BoxCompletionRule.any_assignee, result.CompletionRule);
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task UpdateTask_ValidResponse()
         {
             /*** Arrange ***/
@@ -562,7 +556,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task DeleteTask_TaskDeleted()
         {
             /*** Arrange ***/
@@ -594,7 +587,7 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
+
         public async Task GetTask_ValidResponse()
         {
             /*** Arrange ***/
@@ -659,7 +652,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task GetAssignments_ValidResponse()
         {
             /*** Arrange ***/
@@ -717,7 +709,6 @@ namespace Box.V2.Test
         }
 
         [TestMethod]
-        [TestCategory("CI-UNIT-TEST")]
         public async Task ThrowIfNull_WorksWithNullable_NoValue()
         {
             var responseString = "{\"type\":\"task\",\"id\":\"1874102965\"}";

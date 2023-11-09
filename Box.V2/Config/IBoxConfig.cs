@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using Box.V2.Utility;
 
 namespace Box.V2.Config
 {
@@ -7,8 +8,9 @@ namespace Box.V2.Config
     {
         Uri BoxApiHostUri { get; }
         Uri BoxAccountApiHostUri { get; }
-        Uri BoxApiUri { get; }
         Uri BoxUploadApiUri { get; }
+
+        Uri BoxApiUri { get; }
 
         string ClientId { get; }
         string ConsumerKey { get; }
@@ -129,6 +131,14 @@ namespace Box.V2.Config
         /// </summary>
         Uri SignRequestsEndpointWithPathUri { get; }
         /// <summary>
+        /// Gets the sign templates endpoint URI.
+        /// </summary>
+        Uri SignTemplatesEndpointUri { get; }
+        /// <summary>
+        /// Gets the sign template endpoints URI with path.
+        /// </summary>
+        Uri SignTemplatesEndpointWithPathUri { get; }
+        /// <summary>
         /// Gets the file requests endpoint URI with path.
         /// </summary>
         Uri FileRequestsEndpointWithPathUri { get; }
@@ -140,5 +150,14 @@ namespace Box.V2.Config
         /// Timeout for the connection
         /// </summary>
         TimeSpan? Timeout { get; }
+        /// <summary>
+        /// Retry strategy for failed requests
+        /// </summary>
+        IRetryStrategy RetryStrategy { get; }
+        /// <summary>
+        /// JWT token audience claim.
+        /// https://api.box.com/oauth2/token is used by default.
+        /// </summary>
+        string JWTAudience { get; }
     }
 }

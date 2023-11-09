@@ -20,10 +20,21 @@ $ErrorActionPreference = "Stop"
 
 . $PSScriptRoot\variables.ps1
 
+###########################################################################
+# Pull latest after release PR
+###########################################################################
+
+git pull
+
+###########################################################################
+# Set variables
+###########################################################################
+
 if($NextVersion -eq $null -Or $NextVersion -eq ''){
     $NextVersion = $env:NextVersion
     if($NextVersion -eq $null -Or $NextVersion -eq ''){
         $NextVersion = (Select-String -Pattern [0-9]+\.[0-9]+\.[0-9]+ -Path $CHANGELOG_PATH | Select-Object -First 1).Matches.Value
+        Write-Output "New version is " + $NextVersion
     }
 }
 
@@ -65,7 +76,7 @@ if ($InstallDependencies){
 
 $VersionFound = $false
 foreach($line in Get-Content $CHANGELOG_PATH) {
-    if($line -match "## [[0-9]+\.[0-9]+\.[0-9]+]"){
+    if($line -match "#{2,3} [[0-9]+\.[0-9]+\.[0-9]+]"){
         if($VersionFound){
             break
         }
@@ -98,7 +109,7 @@ if($DryRun){
         Body = $ReleaseNotes
         Draft = $true
     }
-    $release = New-GitHubRelease @releaseParams
+    $newRelease = New-GitHubRelease @releaseParams
 
     Clear-GitHubAuthentication
 }

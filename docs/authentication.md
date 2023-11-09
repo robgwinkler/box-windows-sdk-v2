@@ -14,6 +14,7 @@ overview of how the Box API handles authentication.
 - [Ways to Authenticate](#ways-to-authenticate)
   - [Developer Token](#developer-token)
   - [Server Auth with JWT](#server-auth-with-jwt)
+  - [Server Auth with CCG](#server-auth-with-ccg)
   - [Traditional 3-Legged OAuth2](#traditional-3-legged-oauth2)
     - [AuthRepository Implementation](#authrepository-implementation)
   - [Box View Authentication with App Tokens](#box-view-authentication-with-app-tokens)
@@ -49,7 +50,7 @@ var client = new BoxClient(config, session);
 
 Server auth allows your application to authenticate itself with the Box API
 for a given enterprise.  By default, your application has a
-[Service Account](https://developer.box.com/en/guides/authentication/user-types/)
+[Service Account](https://developer.box.com/guides/getting-started/user-types/service-account/)
 that represents it and can perform API calls.  The Service Account is separate
 from the Box accounts of the application developer and the enterprise admin of
 any enterprise that has authorized the app — files stored in that account are
@@ -84,8 +85,7 @@ adminClient.Auth.SessionAuthenticated += delegate(object o, SessionAuthenticated
 };
 ```
 
-App auth applications also often have associated App Users, which are
-[created and managed directly by the application](https://developer.box.com/en/guides/authentication/user-types/)
+App auth applications also often have associated [App Users](https://developer.box.com/guides/getting-started/user-types/app-users/), which are created and managed directly by the application
 — they do not have normal login credentials, and can only be accessed through
 the Box API by the application that created them.  You may authenticate as the
 Service Account to provision and manage users, or as an individual app user to
@@ -106,6 +106,77 @@ appUserClient.Auth.SessionAuthenticated += delegate(object o, SessionAuthenticat
     string newAccessToken = e.Session.AccessToken;
     // cache the new access token
 };
+```
+
+### Server Auth with CCG
+
+Server auth allows your application to authenticate itself with the Box API
+for a given enterprise. 
+Client Credentials Grant (CCG) allows you to authenticate by providing `clientId` and `clientSecret` and `enterpriseId` of your app.
+By default, your application has a
+[Service Account](https://developer.box.com/guides/getting-started/user-types/service-account/)
+that represents it and can perform API calls. The Service Account is separate
+from the Box accounts of the application developer and the enterprise admin of
+any enterprise that has authorized the app — files stored in that account are
+not accessible in any other account by default, and vice versa.
+
+You'll need to provide the necessary configuration fields directly
+to the `BoxConfigBuilder` constructor:
+
+<!-- sample x_auth with_client_credentials_enterprise -->
+```c#
+var boxConfig = new BoxConfigBuilder("YOUR_CLIENT_ID", "YOUR_CLIENT_SECRET")
+                .SetEnterpriseId("YOUR_ENTERPRISE_ID")
+                .Build();
+var boxCCG = new BoxCCGAuth(boxConfig);
+```
+
+There are two ways to create an admin client, the first one uses explicit admin token:
+```c#
+var adminToken = await boxCCG.AdminTokenAsync(); //valid for 60 minutes so should be cached and re-used
+IBoxClient adminClient = boxCCG.AdminClient(adminToken);
+adminClient.Auth.SessionAuthenticated += delegate(object o, SessionAuthenticatedEventArgs e)
+{
+    string newAccessToken = e.Session.AccessToken;
+    // cache the new access token
+};
+```
+
+Second way leaves token management (caching) to the `Auth`, a new token is retrieved before the first call. Keep in mind that if you create multiple `adminClient` instances, the token won't be shared, it is expected that the `adminClient` instance is reused.
+```c#
+IBoxClient adminClient = boxCCG.AdminClient();
+```
+
+App auth applications also often have associated [App Users](https://developer.box.com/guides/getting-started/user-types/app-users/), which are created and managed directly by the application
+— they do not have normal login credentials, and can only be accessed through
+the Box API by the application that created them.  You may authenticate as the
+Service Account to provision and manage users, or as an individual app user to
+make calls as that user.  See the [API documentation](https://developer.box.com/en/guides/applications/custom-apps/)
+for detailed instructions on how to use app auth.
+
+Clients for making calls as an App User or Managed User can be created with the same `BoxCCGAuth`
+instance as in the above examples, similarly to creating a Service Account client. You don't need to provide `enterpriseId` in this case:
+
+<!-- sample x_auth with_client_credentials -->
+```c#
+var boxConfig = new BoxConfigBuilder("YOUR_CLIENT_ID", "YOUR_CLIENT_SECRET")
+                .Build();
+var boxCCG = new BoxCCGAuth(boxConfig);
+```
+
+Variant with explicit initial token:
+```c#
+var userToken = await boxCCG.UserTokenAsync("USER_ID"); //valid for 60 minutes so should be cached and re-used
+IBoxClient userClient = boxCCG.UserClient(userToken, "USER_ID");
+userClient.Auth.SessionAuthenticated += delegate(object o, SessionAuthenticatedEventArgs e)
+{
+    string newAccessToken = e.Session.AccessToken;
+    // cache the new access token
+};
+```
+Variant without initial token:
+```c#
+IBoxClient userClient = boxCCG.UserClient("USER_ID");
 ```
 
 ### Traditional 3-Legged OAuth2

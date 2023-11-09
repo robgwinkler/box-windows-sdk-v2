@@ -19,20 +19,10 @@ namespace Box.V2.Managers
         /// </summary>
         /// <param name="id">Id of the file.</param>
         /// <param name="fields">Attribute(s) to include in the response.</param>
+        /// <param name="sharedLink">The shared link for this file</param>
+        /// <param name="sharedLinkPassword">The password for the shared link (if required)</param>
         /// <returns>A full file object is returned if the ID is valid and if the user has access to the file.</returns>
-        Task<BoxFile> GetInformationAsync(string id, IEnumerable<string> fields = null);
-
-        /// <summary>
-        /// Returns the stream of the requested file.
-        /// </summary>
-        /// <param name="id">Id of the file to download.</param>
-        /// <param name="versionId">The ID specific version of this file to download.</param>
-        /// <param name="timeout">Optional timeout for response.</param>
-        /// <param name="startOffsetInBytes">Optional timeout for response.</param>
-        /// <param name="endOffsetInBytes">Optional timeout for response.</param>
-        /// <returns>Stream of the requested file.</returns>
-        [Obsolete("This method is deprecated in favor of DownloadAsync()")]
-        Task<Stream> DownloadStreamAsync(string id, string versionId = null, TimeSpan? timeout = null, int? startOffsetInBytes = null, int? endOffsetInBytes = null);
+        Task<BoxFile> GetInformationAsync(string id, IEnumerable<string> fields = null, string sharedLink = null, string sharedLinkPassword = null);
 
         /// <summary>
         /// Returns the stream of the requested file.
@@ -42,8 +32,10 @@ namespace Box.V2.Managers
         /// <param name="timeout">Optional timeout for response.</param>
         /// <param name="startOffsetInBytes">Starting byte of the chunk to download.</param>
         /// <param name="endOffsetInBytes">Ending byte of the chunk to download.</param>
+        /// <param name="sharedLink">The shared link for this file</param>
+        /// <param name="sharedLinkPassword">The password for the shared link (if required)</param>
         /// <returns>Stream of the requested file.</returns>
-        Task<Stream> DownloadAsync(string id, string versionId = null, TimeSpan? timeout = null, long? startOffsetInBytes = null, long? endOffsetInBytes = null);
+        Task<Stream> DownloadAsync(string id, string versionId = null, TimeSpan? timeout = null, long? startOffsetInBytes = null, long? endOffsetInBytes = null, string sharedLink = null, string sharedLinkPassword = null);
 
         /// <summary>
         /// Retrieves the temporary direct Uri to a file (valid for 15 minutes). This is typically used to send as a redirect to a browser to make the browser download the file directly from Box.
@@ -187,18 +179,6 @@ namespace Box.V2.Managers
         /// <param name="fileId">Id of the remote file.</param>
         /// <param name="timeout">Timeout for subsequent UploadPart requests.</param>
         /// <param name="progress">Will report progress from 1 - 100.</param>
-        /// <returns>The BoxFileVersion object.</returns>
-        [Obsolete("UploadFileVersionUsingSessionAsync is deprecated, please use UploadNewVersionUsingSessionAsync instead.")]
-        Task<BoxFileVersion> UploadFileVersionUsingSessionAsync(Stream stream, string fileId, string fileName = null,
-            TimeSpan? timeout = null, IProgress<BoxProgress> progress = null);
-
-        /// <summary>
-        /// Upload a new large file version by splitting them up and uploads in a session.
-        /// </summary>
-        /// <param name="stream">The file stream.</param>
-        /// <param name="fileId">Id of the remote file.</param>
-        /// <param name="timeout">Timeout for subsequent UploadPart requests.</param>
-        /// <param name="progress">Will report progress from 1 - 100.</param>
         /// <returns>The BoxFile object.</returns>
         Task<BoxFile> UploadNewVersionUsingSessionAsync(Stream stream, string fileId, string fileName = null, TimeSpan? timeout = null,
             IProgress<BoxProgress> progress = null);
@@ -221,9 +201,12 @@ namespace Box.V2.Managers
         /// </summary>
         /// <param name="id">The file id.</param>
         /// <param name="fields">Attribute(s) to include in the response.</param>
+        /// <param name="offset">Zero-based index of first OffsetID of part to return.</param>
+        /// <param name="limit">How many parts to return.</param>
+        /// <param name="autoPaginate">Whether or not to auto-paginate to fetch all; defaults to false.</param>
         /// <returns>A collection of versions other than the main version of the file. If a file has no other versions, an empty collection will be returned.
         /// Note that if a file has a total of three versions, only the first two version will be returned.</returns>
-        Task<BoxCollection<BoxFileVersion>> ViewVersionsAsync(string id, IEnumerable<string> fields = null);
+        Task<BoxCollection<BoxFileVersion>> ViewVersionsAsync(string id, IEnumerable<string> fields = null, int? offset = null, int? limit = null, bool autoPaginate = false);
 
         /// <summary>
         /// Used to update individual or multiple fields in the file object, including renaming the file, changing it’s description, 
@@ -285,15 +268,6 @@ namespace Box.V2.Managers
         /// Use this to get a list of all the collaborations on a file
         /// </summary>
         /// <param name="id">Id of the file</param>
-        /// <param name="fields">Attribute(s) to include in the response</param>
-        /// <returns>Collection of the collaborations on a file</returns>
-        [Obsolete("Use GetCollaborationsCollectionAsync() instead; this method does not return the data needed to page through the collection.")]
-        Task<BoxCollection<BoxCollaboration>> GetCollaborationsAsync(string id, IEnumerable<string> fields = null);
-
-        /// <summary>
-        /// Use this to get a list of all the collaborations on a file
-        /// </summary>
-        /// <param name="id">Id of the file</param>
         /// <param name="marker">Paging marker; use null to retrieve the first page of results</param>
         /// <param name="limit">Number of records to return per page</param>
         /// <param name="fields">Attribute(s) to include in the response</param>
@@ -334,27 +308,6 @@ namespace Box.V2.Managers
         /// <param name="id">Id of the file.</param>
         /// <returns>Preview link (URI) for a file that is valid for 60 seconds.</returns>
         Task<Uri> GetPreviewLinkAsync(string id);
-
-        /// <summary>
-        /// Gets the stream of a preview page
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="page"></param>
-        /// /// <param name="handleRetry"></param>
-        /// <returns>A PNG of the preview</returns>
-        [Obsolete("Please use GetPreviewLinkAsync instead.  This functionality is not supported by Box.")]
-        Task<Stream> GetPreviewAsync(string id, int page, bool handleRetry = true);
-
-        /// <summary>
-        /// Get the preview and return a BoxFilePreview response. 
-        /// </summary>
-        /// <param name="id">id of the file to return.</param>
-        /// <param name="page">page number of the file.</param>
-        /// <param name="handleRetry">specifies whether the method handles retries. If true, then the method would retry the call if the HTTP response is 'Accepted'. The delay for the retry is determined 
-        /// by the RetryAfter header, or if that header is not set, by the constant DefaultRetryDelay.</param>
-        /// <returns>BoxFilePreview that contains the stream, current page number and total number of pages in the file.</returns>
-        [Obsolete("Please use GetPreviewLinkAsync instead.  This functionality is not supported by Box.")]
-        Task<BoxFilePreview> GetFilePreviewAsync(string id, int page, int? maxWidth = null, int? minWidth = null, int? maxHeight = null, int? minHeight = null, bool handleRetry = true);
 
         /// <summary>
         /// Retrieves an item that has been moved to the trash.

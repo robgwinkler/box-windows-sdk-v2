@@ -7,9 +7,14 @@ namespace Box.V2.Config
         /*** Base API URIs ***/
         public const string BoxApiHostUriString = "https://api.box.com/";
         public const string BoxAccountApiHostUriString = "https://account.box.com/api/";
+        public const string BoxUploadApiUriWithoutVersionString = "https://upload.box.com/api/";
+
+        public const string BoxApiV2Version = @"2.0";
+        public const string BoxApiCurrentVersionUriString = BoxApiV2Version + "/";
+
         public const string BoxApiUriString = "https://api.box.com/2.0/";
         public const string BoxUploadApiUriString = "https://upload.box.com/api/2.0/";
-
+        public const string BoxAuthTokenApiUriString = "https://api.box.com/oauth2/token";
 
         /*** API Endpoints ***/
         public const string TransactionalEndpointString = @"/api/oauth2/token";
@@ -54,6 +59,8 @@ namespace Box.V2.Config
         public const string FolderLocksString = @"folder_locks/";
         public const string SignRequestsString = @"sign_requests";
         public const string SignRequestsWithPathString = @"sign_requests/";
+        public const string SignTemplatesString = @"sign_templates";
+        public const string SignTemplatesWithPathString = @"sign_templates/";
         public const string FileRequestsWithPathString = @"file_requests/";
 
 
@@ -114,6 +121,8 @@ namespace Box.V2.Config
         public const string FolderLocksEndpointString = BoxApiUriString + FolderLocksString;
         public const string SignRequestsEndpointString = BoxApiUriString + SignRequestsString;
         public const string SignRequestsWithPathEndpointString = BoxApiUriString + SignRequestsWithPathString;
+        public const string SignTemplatesEndpointString = BoxApiUriString + SignTemplatesString;
+        public const string SignTemplatesWithPathEndpointString = BoxApiUriString + SignTemplatesWithPathString;
         public const string FileRequestsWithPathEndpointString = BoxApiUriString + FileRequestsWithPathString;
 
         /*** Endpoint Paths ***/
@@ -157,8 +166,9 @@ namespace Box.V2.Config
 
         /*** Auth ***/
         public const string AuthHeaderKey = "Authorization";
-        public const string V1AuthString = "BoxAuth api_key={0}&auth_token={1}";
         public const string V2AuthString = "Bearer {0}";
+        public const string BearerTokenType = "bearer";
+        public const int AccessTokenExpirationTime = 3600; // seconds
 
         /*** Return types ***/
         public const string TypeFile = "file";
@@ -197,6 +207,7 @@ namespace Box.V2.Config
         public const string TypeApplication = "application";
         public const string TypeFolderLock = "folder_lock";
         public const string TypeSignRequest = "sign-request";
+        public const string TypeSignTemplate = "sign-template";
         public const string TypeFileRequest = "file_request";
 
         /*** File Preview ***/
@@ -233,6 +244,9 @@ namespace Box.V2.Config
 
             public const string Digest = "Digest";
 
+            public const string SubjectType = "box_subject_type";
+            public const string SubjectId = "box_subject_id";
+
             /*** Values ***/
             public const string RefreshToken = "refresh_token";
             public const string AuthorizationCode = "authorization_code";
@@ -259,6 +273,10 @@ namespace Box.V2.Config
             public const string Pending = "pending";
 
             public const string IfMatch = "If-Match";
+
+            public const string ClientCredentials = "client_credentials";
+            public const string UserSubType = "user";
+            public const string EnterpriseSubType = "enterprise";
 
             /*** Values for specifically representations endpoint ***/
             public const string XRepHints = "x-rep-hints";
@@ -445,18 +463,6 @@ namespace Box.V2.Config
             /// 2 factor authentication enabled by user. 
             /// </summary>
             public const string EnableTwoFactorAuth = "ENABLE_TWO_FACTOR_AUTH";
-
-            /// <summary>
-            /// Free user accepts invitation to become a managed user. 
-            /// </summary>
-            [Obsolete("Use AdminInviteAccept instead")]
-            public const string MasterInviteAccept = "MASTER_INVITE_ACCEPT";
-
-            /// <summary>
-            /// Free user rejects invitation to become a managed user. 
-            /// </summary>
-            [Obsolete("Use AdminInviteReject instead")]
-            public const string MasterInviteReject = "MASTER_INVITE_REJECT";
 
             /// <summary>
             /// Free user accepts invitation to become a managed user. 

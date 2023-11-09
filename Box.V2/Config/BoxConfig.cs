@@ -65,6 +65,8 @@ namespace Box.V2.Config
             AcceptEncoding = builder.AcceptEncoding;
             WebProxy = builder.WebProxy;
             Timeout = builder.Timeout;
+            RetryStrategy = builder.RetryStrategy;
+            JWTAudience = builder.JWTAudience;
         }
 
         /// <summary>
@@ -145,8 +147,25 @@ namespace Box.V2.Config
 
         public Uri BoxApiHostUri { get; private set; } = new Uri(Constants.BoxApiHostUriString);
         public Uri BoxAccountApiHostUri { get; private set; } = new Uri(Constants.BoxAccountApiHostUriString);
-        public Uri BoxApiUri { get; private set; } = new Uri(Constants.BoxApiUriString);
-        public Uri BoxUploadApiUri { get; private set; } = new Uri(Constants.BoxUploadApiUriString);
+        public Uri BoxUploadApiUri { get; private set; } = new Uri(new Uri(Constants.BoxUploadApiUriWithoutVersionString), Constants.BoxApiCurrentVersionUriString);
+
+        private Uri _boxApiUri;
+        public Uri BoxApiUri
+        {
+            get { return _boxApiUri ?? new Uri(BoxApiHostUri, Constants.BoxApiCurrentVersionUriString); }
+            private set { _boxApiUri = value; }
+        }
+
+        private string _jwtAudience;
+
+        /// <summary>
+        /// Audience claim for JWT token. 
+        /// </summary>
+        public string JWTAudience
+        {
+            get { return _jwtAudience ?? Constants.BoxAuthTokenApiUriString; }
+            private set { _jwtAudience = value; }
+        }
 
         public string ClientId { get; private set; }
         public string ConsumerKey { get; private set; }
@@ -266,6 +285,14 @@ namespace Box.V2.Config
         /// </summary>
         public Uri SignRequestsEndpointWithPathUri { get { return new Uri(BoxApiUri, Constants.SignRequestsWithPathString); } }
         /// <summary>
+        /// Gets the sign templates endpoint URI.
+        /// </summary>
+        public Uri SignTemplatesEndpointUri { get { return new Uri(BoxApiUri, Constants.SignTemplatesString); } }
+        /// <summary>
+        /// Gets the sign templates endpoint URI with path.
+        /// </summary>
+        public Uri SignTemplatesEndpointWithPathUri { get { return new Uri(BoxApiUri, Constants.SignTemplatesWithPathString); } }
+        /// <summary>
         /// Gets the file requests endpoint URI.
         /// </summary>
         public Uri FileRequestsEndpointWithPathUri { get { return new Uri(BoxApiUri, Constants.FileRequestsWithPathString); } }
@@ -277,6 +304,11 @@ namespace Box.V2.Config
         /// Timeout for the connection
         /// </summary>
         public TimeSpan? Timeout { get; private set; }
+
+        /// <summary>
+        /// Retry strategy for failed requests
+        /// </summary>
+        public IRetryStrategy RetryStrategy { get; private set; } = new ExponentialBackoff();
     }
 
     public enum CompressionType
